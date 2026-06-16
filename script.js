@@ -1,3 +1,30 @@
+const CHART_LIMITS = {
+  songs: 100,
+  albums: 25,
+  videos: 25,
+  streaming: 50,
+  sales: 25,
+  radio: 25
+};
+
+const CHART_LABELS = {
+  songs: "Songs Chart",
+  albums: "Albums Chart",
+  videos: "Music Videos Chart",
+  streaming: "SW Music Streaming Chart",
+  sales: "Sales Chart",
+  radio: "Global Airplay Chart"
+};
+
+const METRIC_LABELS = {
+  songs: "points",
+  albums: "units",
+  videos: "views",
+  streaming: "streams",
+  sales: "sales",
+  radio: "audience"
+};
+
 let allRows = [];
 let validWeeks = [];
 
@@ -14,15 +41,6 @@ function escapeHTML(value) {
     .replaceAll("'", "&#039;");
 }
 
-const CHART_LIMITS = {
-  songs: 100,
-  albums: 25,
-  videos: 25,
-  streaming: 50,
-  sales: 25,
-  radio: 25
-};
-
 function parsePosition(value) {
   const cleaned = clean(value).replace(/[^0-9]/g, "");
   return cleaned ? Number(cleaned) : NaN;
@@ -32,6 +50,10 @@ function parseMetric(value) {
   const cleaned = clean(value).replace(/,/g, "");
   const number = Number(cleaned);
   return isNaN(number) ? "" : number;
+}
+
+function getChartType() {
+  return document.body.dataset.chart || "songs";
 }
 
 function makeKey(title, artist) {
@@ -46,7 +68,10 @@ function makeId(title, artist) {
 }
 
 async function loadCSV(url) {
-  const finalUrl = url.includes("?") ? `${url}&cache=${Date.now()}` : `${url}?cache=${Date.now()}`;
+  const finalUrl = url.includes("?")
+    ? `${url}&cache=${Date.now()}`
+    : `${url}?cache=${Date.now()}`;
+
   const response = await fetch(finalUrl);
   const text = await response.text();
 
@@ -89,7 +114,7 @@ function getValidWeeks(rows) {
   const weeks = [];
 
   rows.forEach(item => {
-    if (!weeks.includes(item.week) && counts[item.week] >= 10) {
+    if (!weeks.includes(item.week) && counts[item.week] >= 5) {
       weeks.push(item.week);
     }
   });
@@ -140,13 +165,13 @@ function getMovement(currentItem, previousRows) {
 }
 
 function getChartRun(title, artist) {
-  const songKey = makeKey(title, artist);
+  const itemKey = makeKey(title, artist);
 
   const run = allRows
-    .filter(item => makeKey(item.title, item.artist) === songKey)
+    .filter(item => makeKey(item.title, item.artist) === itemKey)
     .sort((a, b) => {
-  return validWeeks.indexOf(b.week) - validWeeks.indexOf(a.week);
-});
+      return validWeeks.indexOf(b.week) - validWeeks.indexOf(a.week);
+    });
 
   if (run.length === 0) {
     return `<span>No chart history found.</span>`;
@@ -160,11 +185,17 @@ function getChartRun(title, artist) {
 }
 
 function renderChart(week) {
+  const chartType = getChartType();
+  const limit = CHART_LIMITS[chartType] || 100;
+  const metricLabel = METRIC_LABELS[chartType] || "points";
+
   const previousWeek = getPreviousWeek(week);
 
   const currentRows = allRows
     .filter(item => item.week === week)
     .sort((a, b) => a.position - b.position);
+
+  const limitedRows = currentRows.slice(0, limit);
 
   const previousRows = previousWeek
     ? allRows.filter(item => item.week === previousWeek)
@@ -174,9 +205,9 @@ function renderChart(week) {
   const chartCount = document.getElementById("chartCount");
 
   chart.innerHTML = "";
-  chartCount.textContent = `${currentRows.length} songs · Week of ${week}`;
+  chartCount.textContent = `${limitedRows.length} entries · Week of ${week}`;
 
-  currentRows.forEach(item => {
+  limitedRows.forEach(item => {
     const id = makeId(item.title, item.artist);
 
     chart.innerHTML += `
@@ -200,7 +231,13 @@ function renderChart(week) {
         <div class="song-info">
           <h3>${escapeHTML(item.title)}</h3>
           <p>${escapeHTML(item.artist)}</p>
-          <small>${item.metric !== "" ? Number(item.metric).toLocaleString() : ""} points</small>
+          <small>
+            ${
+              item.metric !== ""
+                ? `${Number(item.metric).toLocaleString()} ${metricLabel}`
+                : ""
+            }
+          </small>
         </div>
 
         <div class="movement">
@@ -249,10 +286,17 @@ function activateButtons() {
   });
 }
 
-async function initSongsPage() {
+async function initChartPage() {
   try {
-    const chartType = document.body.dataset.chart || "songs";
-allRows = await loadCSV(SHEETS[chartType]);
+    const chartType = getChartType();
+    const sheetUrl = SHEETS[chartType];
+
+    if (!sheetUrl) {
+      throw new Error(`No Google Sheets link found for ${chartType}`);
+    }
+
+    allRows = await loadCSV(sheetUrl);
+    validWeeks = getValidWeeks(allRows);
 
     const select = document.getElementById("weekSelect");
     select.innerHTML = "";
@@ -264,6 +308,11 @@ allRows = await loadCSV(SHEETS[chartType]);
     select.addEventListener("change", () => {
       renderChart(select.value);
     });
+
+    const pageTitle = document.querySelector(".chart-top h2");
+    if (pageTitle) {
+      pageTitle.textContent = CHART_LABELS[chartType] || "Chart";
+    }
 
     renderChart(validWeeks[0]);
   } catch (error) {
@@ -279,5 +328,5 @@ allRows = await loadCSV(SHEETS[chartType]);
 }
 
 if (document.getElementById("weekSelect")) {
-  initSongsPage();
+  initChartPage();
 }
