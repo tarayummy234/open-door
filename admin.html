@@ -1,1 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <title>Admin | Open Door Charts</title>
+
+  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    .admin-page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .admin-card {
+      background: #181824;
+      border-radius: 18px;
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+
+    .admin-card h2,
+    .admin-card h3 {
+      margin-top: 0;
+    }
+
+    .admin-warning {
+      background: #25151c;
+      border: 1px solid #ff2d95;
+      color: #ffd9eb;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 20px;
+    }
+
+    .admin-controls {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 12px;
+      margin-top: 15px;
+    }
+
+    .admin-controls select,
+    .admin-controls input {
+      background: #101018;
+      color: white;
+      border: 1px solid #33334a;
+      border-radius: 12px;
+      padding: 13px;
+      font-size: 15px;
+    }
+
+    .admin-results {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .admin-result {
+      display: grid;
+      grid-template-columns: 60px 1fr auto;
+      gap: 14px;
+      align-items: center;
+      background: #101018;
+      border: 1px solid #2d2d3f;
+      border-radius: 14px;
+      padding: 12px;
+      cursor: pointer;
+      color: white;
+      text-align: left;
+    }
+
+    .admin-result:hover,
+    .admin-result.active {
+      border-color: #ff2d95;
+      background: #222231;
+    }
+
+    .admin-result img,
+    .admin-cover-placeholder {
+      width: 60px;
+      height: 60px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: #2a2a38;
+    }
+
+    .admin-result h4 {
+      margin: 0 0 4px;
+    }
+
+    .admin-result p {
+      margin: 0;
+      color: #bbb;
+      font-size: 14px;
+    }
+
+    .admin-selected {
+      display: none;
+    }
+
+    .admin-selected.open {
+      display: block;
+    }
+
+    .admin-selected-top {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .admin-selected-top img,
+    .admin-selected-cover {
+      width: 90px;
+      height: 90px;
+      border-radius: 14px;
+      object-fit: cover;
+      background: #2a2a38;
+    }
+
+    .admin-selected-top h2 {
+      margin: 0 0 6px;
+    }
+
+    .admin-selected-top p {
+      margin: 0;
+      color: #bbb;
+    }
+
+    .unit-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .unit-box {
+      background: #101018;
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .unit-box strong {
+      display: block;
+      color: #ff2d95;
+      font-size: 26px;
+    }
+
+    .unit-box span {
+      color: #bbb;
+      font-size: 13px;
+    }
+
+    .unit-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .unit-buttons button,
+    .admin-reset-button {
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      background: #242433;
+    }
+
+    .unit-buttons button:hover,
+    .admin-reset-button:hover {
+      filter: brightness(1.2);
+    }
+
+    .add-unit {
+      background: #008f5a !important;
+    }
+
+    .remove-unit {
+      background: #a83232 !important;
+    }
+
+    .admin-reset-button {
+      margin-top: 12px;
+      background: #44445a;
+    }
+
+    .admin-log {
+      background: #101018;
+      border-radius: 14px;
+      padding: 14px;
+      max-height: 220px;
+      overflow: auto;
+      color: #ccc;
+      font-size: 13px;
+    }
+
+    .admin-log-row {
+      border-bottom: 1px solid #282838;
+      padding: 8px 0;
+    }
+
+    .admin-log-row:last-child {
+      border-bottom: none;
+    }
+
+    .admin-export {
+      width: 100%;
+      min-height: 150px;
+      background: #101018;
+      color: white;
+      border: 1px solid #33334a;
+      border-radius: 12px;
+      padding: 12px;
+      font-family: monospace;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 750px) {
+      .admin-controls {
+        grid-template-columns: 1fr;
+      }
+
+      .unit-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .unit-buttons {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .admin-result {
+        grid-template-columns: 52px 1fr;
+      }
+
+      .admin-result span {
+        grid-column: 1 / -1;
+      }
+    }
+  </style>
+</head>
+
+<body data-page="admin">
+  <header class="site-header">
+    <h1>Open Door Admin</h1>
+    <p>Manual Unit Control</p>
+  </header>
+
+  <main class="admin-page">
+    <div class="admin-warning">
+      This admin page is hidden because you should not link it in the public navigation.
+      For now, it saves manual unit changes only in this browser.
+    </div>
+
+    <section class="admin-card">
+      <h2>Unit Control</h2>
+      <p>Search for a song or album, select it, then add or remove manual units.</p>
+
+      <div class="admin-controls">
+        <select id="adminType">
+          <option value="song">Songs</option>
+          <option value="album">Albums</option>
+        </select>
+
+        <input
+          id="adminSearch"
+          type="text"
+          placeholder="Type a song or album name..."
+          autocomplete="off"
+        />
+      </div>
+
+      <div id="adminResults" class="admin-results"></div>
+    </section>
+
+    <section id="selectedUnitCard" class="admin-card admin-selected">
+      <div id="selectedUnitContent"></div>
+    </section>
+
+    <section class="admin-card">
+      <h3>Recent Manual Unit Changes</h3>
+      <div id="adminLog" class="admin-log"></div>
+    </section>
+
+    <section class="admin-card">
+      <h3>Export Manual Units</h3>
+      <p>Later, this is the data we can connect to Google Sheets or your certifications page.</p>
+      <textarea id="adminExport" class="admin-export" readonly></textarea>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="config.js"></script>
+
+  <script>
+    const ADMIN_STORAGE_KEY = "openDoorManualUnits";
+    const ADMIN_LOG_KEY = "openDoorManualUnitsLog";
+
+    let adminRows = [];
+    let selectedItem = null;
+
+    function clean(value) {
+      return value === undefined || value === null
+        ? ""
+        : String(value).replaceAll('"', "").trim();
+    }
+
+    function escapeHTML(value) {
+      return clean(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function normalize(value) {
+      return clean(value).toLowerCase().replace(/\s+/g, " ");
+    }
+
+    function parsePosition(value) {
+      const cleaned = clean(value).replace(/[^0-9]/g, "");
+      return cleaned ? Number(cleaned) : NaN;
+    }
+
+    function metricToNumber(value) {
+      const text = clean(value).toUpperCase().replace(/,/g, "");
+      const match = text.match(/[-+]?\d*\.?\d+/);
+
+      if (!match) return 0;
+
+      let number = Number(match[0]);
+
+      if (Number.isNaN(number)) return 0;
+
+      if (text.includes("B")) number *= 1000000000;
+      else if (text.includes("M")) number *= 1000000;
+      else if (text.includes("K")) number *= 1000;
+
+      return number;
+    }
+
+    function shortNumber(number) {
+      if (!number || Number.isNaN(number)) return "0";
+
+      if (Math.abs(number) >= 1000000000) {
+        return `${(number / 1000000000).toFixed(1).replace(".0", "")}B`;
+      }
+
+      if (Math.abs(number) >= 1000000) {
+        return `${(number / 1000000).toFixed(1).replace(".0", "")}M`;
+      }
+
+      if (Math.abs(number) >= 1000) {
+        return `${(number / 1000).toFixed(1).replace(".0", "")}K`;
+      }
+
+      return number.toLocaleString();
+    }
+
+    function splitFullName(fullName) {
+      const text = clean(fullName);
+
+      if (text.includes("\n")) {
+        const parts = text.split("\n").map(clean).filter(Boolean);
+
+        if (parts.length >= 2) {
+          return {
+            title: parts[0],
+            artist: parts.slice(1).join(" ")
+          };
+        }
+      }
+
+      if (text.includes(" - ")) {
+        const parts = text.split(" - ");
+
+        if (parts.length >= 2) {
+          return {
+            title: clean(parts[0]),
+            artist: clean(parts.slice(1).join(" - "))
+          };
+        }
+      }
+
+      return {
+        title: text,
+        artist: ""
+      };
+    }
+
+    function makeItemKey(type, title, artist) {
+      return `${type}|${normalize(title)}|${normalize(artist)}`;
+    }
+
+    function getManualUnitsData() {
+      try {
+        return JSON.parse(localStorage.getItem(ADMIN_STORAGE_KEY)) || {};
+      } catch {
+        return {};
+      }
+    }
+
+    function saveManualUnitsData(data) {
+      localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function getAdminLog() {
+      try {
+        return JSON.parse(localStorage.getItem(ADMIN_LOG_KEY)) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveAdminLog(log) {
+      localStorage.setItem(ADMIN_LOG_KEY, JSON.stringify(log.slice(0, 50)));
+    }
+
+    function getManualUnits(item) {
+      const data = getManualUnitsData();
+      const key = makeItemKey(item.type, item.title, item.artist);
+
+      return data[key] || 0;
+    }
+
+    function setManualUnits(item, amount) {
+      const data = getManualUnitsData();
+      const key = makeItemKey(item.type, item.title, item.artist);
+
+      data[key] = amount;
+
+      saveManualUnitsData(data);
+    }
+
+    function addLog(item, change, newTotal) {
+      const log = getAdminLog();
+
+      log.unshift({
+        type: item.type,
+        title: item.title,
+        artist: item.artist,
+        change,
+        newTotal,
+        date: new Date().toLocaleString()
+      });
+
+      saveAdminLog(log);
+    }
+
+    function getFinalUnits(item) {
+      return item.baseUnits + getManualUnits(item);
+    }
+
+    async function loadCSV(url, chartType) {
+      const finalUrl = url.includes("?")
+        ? `${url}&cache=${Date.now()}`
+        : `${url}?cache=${Date.now()}`;
+
+      const response = await fetch(finalUrl);
+      const text = await response.text();
+
+      const parsed = Papa.parse(text, {
+        skipEmptyLines: true
+      });
+
+      return parsed.data
+        .map(row => {
+          const fromFullName = splitFullName(row[2]);
+          const title = clean(row[5]) || fromFullName.title;
+          const artist = clean(row[6]) || fromFullName.artist;
+
+          const metricRaw =
+            chartType === "streaming" || chartType === "sales"
+              ? clean(row[9])
+              : clean(row[3]);
+
+          return {
+            chartType,
+            week: clean(row[0]),
+            position: parsePosition(row[1]),
+            title,
+            artist,
+            cover: clean(row[8]),
+            metricRaw,
+            metricNumber: metricToNumber(metricRaw)
+          };
+        })
+        .filter(item => {
+          return (
+            item.week &&
+            !Number.isNaN(item.position) &&
+            item.position > 0 &&
+            item.title &&
+            item.artist
+          );
+        });
+    }
+
+    function combineSongUnits(streamingRows, salesRows) {
+      const map = new Map();
+
+      function ensureSong(row) {
+        const key = makeItemKey("song", row.title, row.artist);
+
+        if (!map.has(key)) {
+          map.set(key, {
+            type: "song",
+            title: row.title,
+            artist: row.artist,
+            cover: row.cover,
+            streamingTotal: 0,
+            salesTotal: 0,
+            baseUnits: 0
+          });
+        }
+
+        const item = map.get(key);
+
+        if (!item.cover && row.cover) {
+          item.cover = row.cover;
+        }
+
+        return item;
+      }
+
+      streamingRows.forEach(row => {
+        const item = ensureSong(row);
+        item.streamingTotal += row.metricNumber || 0;
+      });
+
+      salesRows.forEach(row => {
+        const item = ensureSong(row);
+        item.salesTotal += row.metricNumber || 0;
+      });
+
+      return Array.from(map.values()).map(item => {
+        item.baseUnits = Math.round(item.salesTotal + item.streamingTotal / 144.9);
+        return item;
+      });
+    }
+
+    function combineAlbumUnits(albumRows) {
+      const map = new Map();
+
+      albumRows.forEach(row => {
+        const key = makeItemKey("album", row.title, row.artist);
+
+        if (!map.has(key)) {
+          map.set(key, {
+            type: "album",
+            title: row.title,
+            artist: row.artist,
+            cover: row.cover,
+            baseUnits: 0
+          });
+        }
+
+        const item = map.get(key);
+
+        item.baseUnits += row.metricNumber || 0;
+
+        if (!item.cover && row.cover) {
+          item.cover = row.cover;
+        }
+      });
+
+      return Array.from(map.values()).map(item => {
+        item.baseUnits = Math.round(item.baseUnits);
+        return item;
+      });
+    }
+
+    async function loadAdminItems() {
+      const streamingRows = await loadCSV(SHEETS.streaming, "streaming").catch(() => []);
+      const salesRows = await loadCSV(SHEETS.sales, "sales").catch(() => []);
+      const albumRows = await loadCSV(SHEETS.albums, "albums").catch(() => []);
+
+      const songs = combineSongUnits(streamingRows, salesRows);
+      const albums = combineAlbumUnits(albumRows);
+
+      adminRows = [...songs, ...albums];
+    }
+
+    function renderResults() {
+      const type = document.getElementById("adminType").value;
+      const search = normalize(document.getElementById("adminSearch").value);
+      const resultsBox = document.getElementById("adminResults");
+
+      if (!resultsBox) return;
+
+      if (!search) {
+        resultsBox.innerHTML = `<p style="color:#bbb;">Start typing to search.</p>`;
+        return;
+      }
+
+      const results = adminRows
+        .filter(item => {
+          return (
+            item.type === type &&
+            (
+              normalize(item.title).includes(search) ||
+              normalize(item.artist).includes(search)
+            )
+          );
+        })
+        .sort((a, b) => getFinalUnits(b) - getFinalUnits(a))
+        .slice(0, 20);
+
+      if (results.length === 0) {
+        resultsBox.innerHTML = `<p style="color:#bbb;">No results found.</p>`;
+        return;
+      }
+
+      resultsBox.innerHTML = results.map((item, index) => {
+        const active =
+          selectedItem &&
+          makeItemKey(selectedItem.type, selectedItem.title, selectedItem.artist) ===
+          makeItemKey(item.type, item.title, item.artist)
+            ? "active"
+            : "";
+
+        return `
+          <button class="admin-result ${active}" data-index="${index}">
+            ${
+              item.cover
+                ? `<img src="${escapeHTML(item.cover)}" alt="${escapeHTML(item.title)} cover" onerror="this.style.display='none'">`
+                : `<div class="admin-cover-placeholder"></div>`
+            }
+
+            <div>
+              <h4>${escapeHTML(item.title)}</h4>
+              <p>${escapeHTML(item.artist)}</p>
+            </div>
+
+            <span>${escapeHTML(shortNumber(getFinalUnits(item)))} units</span>
+          </button>
+        `;
+      }).join("");
+
+      document.querySelectorAll(".admin-result").forEach(button => {
+        button.addEventListener("click", () => {
+          selectedItem = results[Number(button.dataset.index)];
+          renderSelectedItem();
+          renderResults();
+        });
+      });
+    }
+
+    function adjustUnits(amount) {
+      if (!selectedItem) return;
+
+      const currentManual = getManualUnits(selectedItem);
+      const nextManual = currentManual + amount;
+
+      setManualUnits(selectedItem, nextManual);
+      addLog(selectedItem, amount, nextManual);
+
+      renderSelectedItem();
+      renderResults();
+      renderLog();
+      renderExport();
+    }
+
+    function resetManualUnits() {
+      if (!selectedItem) return;
+
+      setManualUnits(selectedItem, 0);
+      addLog(selectedItem, "RESET", 0);
+
+      renderSelectedItem();
+      renderResults();
+      renderLog();
+      renderExport();
+    }
+
+    function renderSelectedItem() {
+      const card = document.getElementById("selectedUnitCard");
+      const content = document.getElementById("selectedUnitContent");
+
+      if (!card || !content || !selectedItem) return;
+
+      card.classList.add("open");
+
+      const manualUnits = getManualUnits(selectedItem);
+      const finalUnits = getFinalUnits(selectedItem);
+
+      content.innerHTML = `
+        <div class="admin-selected-top">
+          ${
+            selectedItem.cover
+              ? `<img src="${escapeHTML(selectedItem.cover)}" alt="${escapeHTML(selectedItem.title)} cover" onerror="this.style.display='none'">`
+              : `<div class="admin-selected-cover"></div>`
+          }
+
+          <div>
+            <h2>${escapeHTML(selectedItem.title)}</h2>
+            <p>${escapeHTML(selectedItem.artist)}</p>
+            <p>${selectedItem.type === "song" ? "Song units" : "Album units"}</p>
+          </div>
+        </div>
+
+        <div class="unit-grid">
+          <div class="unit-box">
+            <strong>${escapeHTML(shortNumber(selectedItem.baseUnits))}</strong>
+            <span>Calculated Units</span>
+          </div>
+
+          <div class="unit-box">
+            <strong>${escapeHTML(shortNumber(manualUnits))}</strong>
+            <span>Manual Units</span>
+          </div>
+
+          <div class="unit-box">
+            <strong>${escapeHTML(shortNumber(finalUnits))}</strong>
+            <span>Final Units</span>
+          </div>
+        </div>
+
+        <div class="unit-buttons">
+          <button class="add-unit" onclick="adjustUnits(100000)">+100K Units</button>
+          <button class="add-unit" onclick="adjustUnits(10000)">+10K Units</button>
+          <button class="remove-unit" onclick="adjustUnits(-100000)">-100K Units</button>
+          <button class="remove-unit" onclick="adjustUnits(-10000)">-10K Units</button>
+        </div>
+
+        <button class="admin-reset-button" onclick="resetManualUnits()">Reset Manual Units</button>
+      `;
+    }
+
+    function renderLog() {
+      const logBox = document.getElementById("adminLog");
+
+      if (!logBox) return;
+
+      const log = getAdminLog();
+
+      if (log.length === 0) {
+        logBox.innerHTML = `<p>No manual changes yet.</p>`;
+        return;
+      }
+
+      logBox.innerHTML = log.map(row => {
+        const changeText =
+          row.change === "RESET"
+            ? "RESET"
+            : `${row.change > 0 ? "+" : ""}${shortNumber(row.change)}`;
+
+        return `
+          <div class="admin-log-row">
+            <strong>${escapeHTML(changeText)}</strong>
+            ${escapeHTML(row.type)} units —
+            ${escapeHTML(row.title)} by ${escapeHTML(row.artist)}
+            <br>
+            <span>${escapeHTML(row.date)} · Manual total: ${escapeHTML(shortNumber(row.newTotal))}</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderExport() {
+      const exportBox = document.getElementById("adminExport");
+
+      if (!exportBox) return;
+
+      exportBox.value = JSON.stringify(getManualUnitsData(), null, 2);
+    }
+
+    async function initAdmin() {
+      const resultsBox = document.getElementById("adminResults");
+
+      if (resultsBox) {
+        resultsBox.innerHTML = `<p style="color:#bbb;">Loading songs and albums...</p>`;
+      }
+
+      await loadAdminItems();
+
+      document.getElementById("adminType").addEventListener("change", () => {
+        selectedItem = null;
+        document.getElementById("selectedUnitCard").classList.remove("open");
+        renderResults();
+      });
+
+      document.getElementById("adminSearch").addEventListener("input", renderResults);
+
+      renderResults();
+      renderLog();
+      renderExport();
+    }
+
+    initAdmin();
+  </script>
+</body>
+</html>
