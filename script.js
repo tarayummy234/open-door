@@ -136,8 +136,8 @@ function getChartRun(title, artist) {
   const run = allRows
     .filter(item => makeKey(item.title, item.artist) === songKey)
     .sort((a, b) => {
-      return validWeeks.indexOf(a.week) - validWeeks.indexOf(b.week);
-    });
+  return validWeeks.indexOf(b.week) - validWeeks.indexOf(a.week);
+});
 
   if (run.length === 0) {
     return `<span>No chart history found.</span>`;
