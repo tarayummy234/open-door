@@ -1,1 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <title>Certifications | Open Door Charts</title>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body data-page="certifications">
+  <header class="site-header">
+    <h1>Open Door Charts</h1>
+    <p>Unit Certifications</p>
+  </header>
+
+  <nav class="nav">
+    <a href="index.html">Home</a>
+    <a href="songs.html">Songs</a>
+    <a href="albums.html">Albums</a>
+    <a href="videos.html">Music Videos</a>
+    <a href="streaming.html">SW Music</a>
+    <a href="sales.html">Sales</a>
+    <a href="radio.html">Global Airplay</a>
+    <a href="artists.html">Artists</a>
+    <a href="number-ones.html">All #1s</a>
+    <a href="year-end.html">Year-End</a>
+    <a href="certifications.html">Certifications</a>
+  </nav>
+
+  <main class="certifications-page">
+    <section class="certifications-header">
+      <h2>Certifications</h2>
+      <p>Certifications are based on calculated chart units plus manual units added from the admin page.</p>
+
+      <div class="certification-tabs">
+        <button class="certification-tab active" data-type="song">Songs</button>
+        <button class="certification-tab" data-type="album">Albums</button>
+      </div>
+    </section>
+
+    <section id="certificationStats" class="certification-stats"></section>
+
+    <section id="certificationList" class="certification-list">
+      <p class="loading-message">Loading certifications...</p>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="config.js"></script>
+
+  <script>
+    const ADMIN_STORAGE_KEY = "openDoorManualUnits";
+
+    const CERTIFICATION_LEVELS = [
+      { label: "10x Ruby", threshold: 180000000, tier: "ruby" },
+      { label: "9x Ruby", threshold: 165000000, tier: "ruby" },
+      { label: "8x Ruby", threshold: 150000000, tier: "ruby" },
+      { label: "7x Ruby", threshold: 135000000, tier: "ruby" },
+      { label: "6x Ruby", threshold: 120000000, tier: "ruby" },
+      { label: "5x Ruby", threshold: 105000000, tier: "ruby" },
+      { label: "4x Ruby", threshold: 90000000, tier: "ruby" },
+      { label: "3x Ruby", threshold: 85000000, tier: "ruby" },
+      { label: "2x Ruby", threshold: 70000000, tier: "ruby" },
+      { label: "1x Ruby", threshold: 55000000, tier: "ruby" },
+
+      { label: "9x Diamond", threshold: 50000000, tier: "diamond" },
+      { label: "8x Diamond", threshold: 45000000, tier: "diamond" },
+      { label: "7x Diamond", threshold: 40000000, tier: "diamond" },
+      { label: "6x Diamond", threshold: 35000000, tier: "diamond" },
+      { label: "5x Diamond", threshold: 30000000, tier: "diamond" },
+      { label: "4x Diamond", threshold: 25000000, tier: "diamond" },
+      { label: "3x Diamond", threshold: 20000000, tier: "diamond" },
+      { label: "2x Diamond", threshold: 15000000, tier: "diamond" },
+      { label: "1x Diamond", threshold: 10000000, tier: "diamond" },
+
+      { label: "9x Platinum", threshold: 9000000, tier: "platinum" },
+      { label: "8x Platinum", threshold: 8000000, tier: "platinum" },
+      { label: "7x Platinum", threshold: 7000000, tier: "platinum" },
+      { label: "6x Platinum", threshold: 6000000, tier: "platinum" },
+      { label: "5x Platinum", threshold: 5000000, tier: "platinum" },
+      { label: "4x Platinum", threshold: 4000000, tier: "platinum" },
+      { label: "3x Platinum", threshold: 3000000, tier: "platinum" },
+      { label: "2x Platinum", threshold: 2000000, tier: "platinum" },
+      { label: "1x Platinum", threshold: 1000000, tier: "platinum" },
+
+      { label: "9x Gold", threshold: 900000, tier: "gold" },
+      { label: "8x Gold", threshold: 800000, tier: "gold" },
+      { label: "7x Gold", threshold: 700000, tier: "gold" },
+      { label: "6x Gold", threshold: 600000, tier: "gold" },
+      { label: "5x Gold", threshold: 500000, tier: "gold" },
+      { label: "4x Gold", threshold: 400000, tier: "gold" },
+      { label: "3x Gold", threshold: 300000, tier: "gold" },
+      { label: "2x Gold", threshold: 200000, tier: "gold" },
+      { label: "1x Gold", threshold: 100000, tier: "gold" },
+
+      { label: "9x Bronze", threshold: 90000, tier: "bronze" },
+      { label: "8x Bronze", threshold: 80000, tier: "bronze" },
+      { label: "7x Bronze", threshold: 70000, tier: "bronze" },
+      { label: "6x Bronze", threshold: 60000, tier: "bronze" },
+      { label: "5x Bronze", threshold: 50000, tier: "bronze" },
+      { label: "4x Bronze", threshold: 40000, tier: "bronze" },
+      { label: "3x Bronze", threshold: 30000, tier: "bronze" },
+      { label: "2x Bronze", threshold: 20000, tier: "bronze" },
+      { label: "1x Bronze", threshold: 10000, tier: "bronze" }
+    ];
+
+    let certificationRows = [];
+    let activeCertificationType = "song";
+
+    function clean(value) {
+      return value === undefined || value === null
+        ? ""
+        : String(value).replaceAll('"', "").trim();
+    }
+
+    function escapeHTML(value) {
+      return clean(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function normalize(value) {
+      return clean(value).toLowerCase().replace(/\s+/g, " ");
+    }
+
+    function parsePosition(value) {
+      const cleaned = clean(value).replace(/[^0-9]/g, "");
+      return cleaned ? Number(cleaned) : NaN;
+    }
+
+    function metricToNumber(value) {
+      const text = clean(value).toUpperCase().replace(/,/g, "");
+      const match = text.match(/[-+]?\d*\.?\d+/);
+
+      if (!match) return 0;
+
+      let number = Number(match[0]);
+
+      if (Number.isNaN(number)) return 0;
+
+      if (text.includes("B")) number *= 1000000000;
+      else if (text.includes("M")) number *= 1000000;
+      else if (text.includes("K")) number *= 1000;
+
+      return number;
+    }
+
+    function shortNumber(number) {
+      if (!number || Number.isNaN(number)) return "0";
+
+      if (Math.abs(number) >= 1000000000) {
+        return `${(number / 1000000000).toFixed(1).replace(".0", "")}B`;
+      }
+
+      if (Math.abs(number) >= 1000000) {
+        return `${(number / 1000000).toFixed(1).replace(".0", "")}M`;
+      }
+
+      if (Math.abs(number) >= 1000) {
+        return `${(number / 1000).toFixed(1).replace(".0", "")}K`;
+      }
+
+      return number.toLocaleString();
+    }
+
+    function splitFullName(fullName) {
+      const text = clean(fullName);
+
+      if (text.includes("\n")) {
+        const parts = text.split("\n").map(clean).filter(Boolean);
+
+        if (parts.length >= 2) {
+          return {
+            title: parts[0],
+            artist: parts.slice(1).join(" ")
+          };
+        }
+      }
+
+      if (text.includes(" - ")) {
+        const parts = text.split(" - ");
+
+        if (parts.length >= 2) {
+          return {
+            title: clean(parts[0]),
+            artist: clean(parts.slice(1).join(" - "))
+          };
+        }
+      }
+
+      return {
+        title: text,
+        artist: ""
+      };
+    }
+
+    function artistURL(artist) {
+      return `artists.html?artist=${encodeURIComponent(clean(artist))}`;
+    }
+
+    function makeItemKey(type, title, artist) {
+      return `${type}|${normalize(title)}|${normalize(artist)}`;
+    }
+
+    function getManualUnitsData() {
+      try {
+        return JSON.parse(localStorage.getItem(ADMIN_STORAGE_KEY)) || {};
+      } catch {
+        return {};
+      }
+    }
+
+    function getManualUnits(item) {
+      const data = getManualUnitsData();
+      const key = makeItemKey(item.type, item.title, item.artist);
+
+      return data[key] || 0;
+    }
+
+    function getCertification(units) {
+      return CERTIFICATION_LEVELS.find(level => units >= level.threshold) || null;
+    }
+
+    async function loadCSV(url, chartType) {
+      const finalUrl = url.includes("?")
+        ? `${url}&cache=${Date.now()}`
+        : `${url}?cache=${Date.now()}`;
+
+      const response = await fetch(finalUrl);
+      const text = await response.text();
+
+      const parsed = Papa.parse(text, {
+        skipEmptyLines: true
+      });
+
+      return parsed.data
+        .map(row => {
+          const fromFullName = splitFullName(row[2]);
+          const title = clean(row[5]) || fromFullName.title;
+          const artist = clean(row[6]) || fromFullName.artist;
+
+          const metricRaw =
+            chartType === "streaming" || chartType === "sales"
+              ? clean(row[9])
+              : clean(row[3]);
+
+          return {
+            chartType,
+            week: clean(row[0]),
+            position: parsePosition(row[1]),
+            title,
+            artist,
+            cover: clean(row[8]),
+            metricRaw,
+            metricNumber: metricToNumber(metricRaw)
+          };
+        })
+        .filter(item => {
+          return (
+            item.week &&
+            !Number.isNaN(item.position) &&
+            item.position > 0 &&
+            item.title &&
+            item.artist
+          );
+        });
+    }
+
+    function combineSongUnits(streamingRows, salesRows) {
+      const map = new Map();
+
+      function ensureSong(row) {
+        const key = makeItemKey("song", row.title, row.artist);
+
+        if (!map.has(key)) {
+          map.set(key, {
+            type: "song",
+            title: row.title,
+            artist: row.artist,
+            cover: row.cover,
+            streamingTotal: 0,
+            salesTotal: 0,
+            baseUnits: 0
+          });
+        }
+
+        const item = map.get(key);
+
+        if (!item.cover && row.cover) {
+          item.cover = row.cover;
+        }
+
+        return item;
+      }
+
+      streamingRows.forEach(row => {
+        const item = ensureSong(row);
+        item.streamingTotal += row.metricNumber || 0;
+      });
+
+      salesRows.forEach(row => {
+        const item = ensureSong(row);
+        item.salesTotal += row.metricNumber || 0;
+      });
+
+      return Array.from(map.values()).map(item => {
+        item.baseUnits = Math.round(item.salesTotal + item.streamingTotal / 144.9);
+        return item;
+      });
+    }
+
+    function combineAlbumUnits(albumRows) {
+      const map = new Map();
+
+      albumRows.forEach(row => {
+        const key = makeItemKey("album", row.title, row.artist);
+
+        if (!map.has(key)) {
+          map.set(key, {
+            type: "album",
+            title: row.title,
+            artist: row.artist,
+            cover: row.cover,
+            baseUnits: 0
+          });
+        }
+
+        const item = map.get(key);
+
+        item.baseUnits += row.metricNumber || 0;
+
+        if (!item.cover && row.cover) {
+          item.cover = row.cover;
+        }
+      });
+
+      return Array.from(map.values()).map(item => {
+        item.baseUnits = Math.round(item.baseUnits);
+        return item;
+      });
+    }
+
+    async function loadCertificationItems() {
+      const streamingRows = await loadCSV(SHEETS.streaming, "streaming").catch(() => []);
+      const salesRows = await loadCSV(SHEETS.sales, "sales").catch(() => []);
+      const albumRows = await loadCSV(SHEETS.albums, "albums").catch(() => []);
+
+      const songs = combineSongUnits(streamingRows, salesRows);
+      const albums = combineAlbumUnits(albumRows);
+
+      certificationRows = [...songs, ...albums].map(item => {
+        const manualUnits = getManualUnits(item);
+        const finalUnits = item.baseUnits + manualUnits;
+        const certification = getCertification(finalUnits);
+
+        return {
+          ...item,
+          manualUnits,
+          finalUnits,
+          certification
+        };
+      });
+    }
+
+    function getCertifiedItems(type) {
+      return certificationRows
+        .filter(item => item.type === type && item.certification)
+        .sort((a, b) => b.finalUnits - a.finalUnits);
+    }
+
+    function renderCertificationStats(items) {
+      const statsBox = document.getElementById("certificationStats");
+
+      if (!statsBox) return;
+
+      const totalCertified = items.length;
+      const rubyCount = items.filter(item => item.certification.tier === "ruby").length;
+      const diamondCount = items.filter(item => item.certification.tier === "diamond").length;
+      const highest = items[0];
+
+      statsBox.innerHTML = `
+        <div>
+          <strong>${escapeHTML(totalCertified)}</strong>
+          <span>Certified Entries</span>
+        </div>
+
+        <div>
+          <strong>${escapeHTML(rubyCount)}</strong>
+          <span>Ruby Entries</span>
+        </div>
+
+        <div>
+          <strong>${escapeHTML(diamondCount)}</strong>
+          <span>Diamond Entries</span>
+        </div>
+
+        <div>
+          <strong>${highest ? escapeHTML(highest.certification.label) : "—"}</strong>
+          <span>Highest Certification</span>
+        </div>
+      `;
+    }
+
+    function renderCertifications() {
+      const list = document.getElementById("certificationList");
+
+      if (!list) return;
+
+      const items = getCertifiedItems(activeCertificationType);
+
+      renderCertificationStats(items);
+
+      if (items.length === 0) {
+        list.innerHTML = `
+          <div class="certification-empty">
+            <h3>No certified ${activeCertificationType}s yet.</h3>
+            <p>Add manual units in admin.html or wait until entries reach at least 10K units.</p>
+          </div>
+        `;
+
+        return;
+      }
+
+      list.innerHTML = items.map((item, index) => {
+        return `
+          <article class="certification-card">
+            <div class="certification-rank">#${index + 1}</div>
+
+            ${
+              item.cover
+                ? `<img class="certification-cover" src="${escapeHTML(item.cover)}" alt="${escapeHTML(item.title)} cover" onerror="this.style.display='none'">`
+                : `<div class="certification-cover placeholder"></div>`
+            }
+
+            <div class="certification-main">
+              <div class="certification-title-row">
+                <div>
+                  <h3>${escapeHTML(item.title)}</h3>
+                  <a href="${artistURL(item.artist)}">${escapeHTML(item.artist)}</a>
+                </div>
+
+                <div class="certification-badge ${escapeHTML(item.certification.tier)}">
+                  ${escapeHTML(item.certification.label)}
+                </div>
+              </div>
+
+              <div class="certification-unit-strip">
+                <div>
+                  <strong>${escapeHTML(shortNumber(item.finalUnits))}</strong>
+                  <span>Final Units</span>
+                </div>
+
+                <div>
+                  <strong>${escapeHTML(shortNumber(item.baseUnits))}</strong>
+                  <span>Calculated Units</span>
+                </div>
+
+                <div>
+                  <strong>${escapeHTML(shortNumber(item.manualUnits))}</strong>
+                  <span>Manual Units</span>
+                </div>
+
+                <div>
+                  <strong>${escapeHTML(shortNumber(item.certification.threshold))}</strong>
+                  <span>Certification Mark</span>
+                </div>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function activateCertificationTabs() {
+      document.querySelectorAll(".certification-tab").forEach(button => {
+        button.addEventListener("click", () => {
+          activeCertificationType = button.dataset.type;
+
+          document.querySelectorAll(".certification-tab").forEach(tab => {
+            tab.classList.remove("active");
+          });
+
+          button.classList.add("active");
+
+          renderCertifications();
+        });
+      });
+    }
+
+    async function initCertifications() {
+      try {
+        await loadCertificationItems();
+        activateCertificationTabs();
+        renderCertifications();
+      } catch (error) {
+        const list = document.getElementById("certificationList");
+
+        if (list) {
+          list.innerHTML = `
+            <div class="certification-empty">
+              <h3>Certifications could not load.</h3>
+              <p>Check your Google Sheets links in config.js.</p>
+            </div>
+          `;
+        }
+
+        console.error(error);
+      }
+    }
+
+    initCertifications();
+  </script>
+</body>
+</html>
