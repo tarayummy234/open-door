@@ -77,3 +77,132 @@ main {
 .artist {
   color: #bbb;
 }
+.nav a {
+  color: white;
+  text-decoration: none;
+  background: #222;
+  padding: 10px 16px;
+  border-radius: 999px;
+}
+
+.chart-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+#weekSelect {
+  background: #181824;
+  color: white;
+  border: 1px solid #333;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.chart-row {
+  display: grid;
+  grid-template-columns: 70px 80px 1fr 90px 50px;
+  align-items: center;
+  gap: 15px;
+  background: #181824;
+  margin-bottom: 10px;
+  padding: 14px;
+  border-radius: 16px;
+}
+
+.rank {
+  font-size: 26px;
+  font-weight: bold;
+  color: #ff2d95;
+}
+
+.cover-wrap {
+  position: relative;
+  width: 70px;
+  height: 70px;
+}
+
+.cover {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.placeholder {
+  background: #333;
+}
+
+.play {
+  display: none;
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: rgba(0,0,0,.55);
+  color: white;
+  border: none;
+  font-size: 22px;
+}
+
+.cover-wrap:hover .play {
+  display: block;
+}
+
+.song-info h3 {
+  margin: 0;
+}
+
+.song-info p {
+  margin: 4px 0;
+  color: #bbb;
+}
+
+.song-info small {
+  color: #888;
+}
+
+.move.up {
+  color: #00ff88;
+}
+
+.move.down {
+  color: #ff4d4d;
+}
+
+.move.same {
+  color: #aaa;
+}
+
+.tag.new,
+.tag.reentry {
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.expand {
+  background: #333;
+  border-radius: 50%;
+  padding: 10px;
+}
+
+.chart-run {
+  display: none;
+  background: #101018;
+  padding: 12px 20px;
+  margin: -5px 0 12px 85px;
+  border-radius: 12px;
+}
+
+.chart-run.open {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.chart-run span {
+  background: #222;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+}
