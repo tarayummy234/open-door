@@ -1386,3 +1386,246 @@ nav a:hover {
     grid-column: 1 / -1;
   }
 }
+
+.certifications-page {
+  max-width: 1150px;
+}
+
+.certifications-header {
+  background: #181824;
+  border-radius: 18px;
+  padding: 22px;
+  margin-bottom: 20px;
+}
+
+.certifications-header h2 {
+  margin-top: 0;
+}
+
+.certifications-header p {
+  color: #bbb;
+}
+
+.certification-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.certification-tab {
+  background: #101018;
+  color: white;
+  border: 1px solid #33334a;
+  border-radius: 999px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.certification-tab:hover {
+  background: #242433;
+}
+
+.certification-tab.active {
+  background: #ff2d95;
+  border-color: #ff2d95;
+}
+
+.certification-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.certification-stats div {
+  background: #181824;
+  border-radius: 16px;
+  padding: 18px;
+  text-align: center;
+}
+
+.certification-stats strong {
+  display: block;
+  color: #ff2d95;
+  font-size: 28px;
+}
+
+.certification-stats span {
+  color: #bbb;
+  font-size: 13px;
+}
+
+.certification-list {
+  display: grid;
+  gap: 12px;
+}
+
+.certification-card {
+  display: grid;
+  grid-template-columns: 58px 86px 1fr;
+  gap: 16px;
+  align-items: center;
+  background: #181824;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.certification-rank {
+  color: #ff2d95;
+  font-weight: bold;
+  font-size: 22px;
+  text-align: center;
+  background: #101018;
+  border-radius: 14px;
+  padding: 14px 0;
+}
+
+.certification-cover {
+  width: 86px;
+  height: 86px;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #2a2a38;
+}
+
+.certification-main h3 {
+  margin: 0 0 5px;
+  font-size: 22px;
+}
+
+.certification-main a {
+  color: #bbb;
+  text-decoration: none;
+}
+
+.certification-main a:hover {
+  color: #ff2d95;
+  text-decoration: underline;
+}
+
+.certification-title-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+}
+
+.certification-badge {
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-weight: bold;
+  color: white;
+  text-align: center;
+  min-width: 120px;
+}
+
+.certification-badge.ruby {
+  background: linear-gradient(135deg, #ff1744, #8b001c);
+}
+
+.certification-badge.diamond {
+  background: linear-gradient(135deg, #aaf6ff, #517fff);
+  color: #07101f;
+}
+
+.certification-badge.platinum {
+  background: linear-gradient(135deg, #e5e5e5, #777);
+  color: #111;
+}
+
+.certification-badge.gold {
+  background: linear-gradient(135deg, #ffd700, #a87900);
+  color: #191100;
+}
+
+.certification-badge.bronze {
+  background: linear-gradient(135deg, #cd7f32, #704214);
+}
+
+.certification-unit-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.certification-unit-strip div {
+  background: #101018;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.certification-unit-strip strong {
+  display: block;
+  color: white;
+  font-size: 20px;
+}
+
+.certification-unit-strip span {
+  display: block;
+  color: #aaa;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.certification-empty,
+.loading-message {
+  background: #181824;
+  color: #bbb;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+@media (max-width: 850px) {
+  .certification-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .certification-card {
+    grid-template-columns: 50px 72px 1fr;
+  }
+
+  .certification-cover {
+    width: 72px;
+    height: 72px;
+  }
+
+  .certification-title-row {
+    grid-template-columns: 1fr;
+  }
+
+  .certification-badge {
+    width: fit-content;
+  }
+
+  .certification-unit-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .certification-card {
+    grid-template-columns: 44px 64px 1fr;
+    gap: 12px;
+  }
+
+  .certification-cover {
+    width: 64px;
+    height: 64px;
+  }
+
+  .certification-rank {
+    font-size: 18px;
+    padding: 10px 0;
+  }
+
+  .certification-main h3 {
+    font-size: 18px;
+  }
+
+  .certification-unit-strip {
+    grid-column: 1 / -1;
+  }
+}
