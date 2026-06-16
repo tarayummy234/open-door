@@ -8,7 +8,7 @@
 </head>
 <body>
   <header class="site-header">
-    <h1>Open Door</h1>
+    <h1>Open Door Charts</h1>
     <p>Songs Chart</p>
   </header>
 
@@ -19,13 +19,22 @@
 
   <main class="chart-page">
     <div class="chart-top">
-      <h2>Songs Chart</h2>
-      <select id="weekSelect"></select>
+      <div>
+        <h2>Songs Chart</h2>
+        <p id="chartCount">Loading chart...</p>
+      </div>
+
+      <select id="weekSelect">
+        <option>Loading...</option>
+      </select>
     </div>
 
     <div id="chart"></div>
   </main>
 
+  <audio id="audioPlayer"></audio>
+
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="config.js"></script>
   <script src="script.js"></script>
 </body>
