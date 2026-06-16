@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sweet 16 Charts</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Sweet 16 Charts</h1>
+    <p>The official weekly music chart</p>
+  </header>
+
+  <nav>
+    <button onclick="showChart('songs')">Songs</button>
+    <button onclick="showChart('albums')">Albums</button>
+    <button onclick="showChart('streaming')">Streaming</button>
+    <button onclick="showChart('sales')">Sales</button>
+    <button onclick="showChart('radio')">Radio</button>
+    <button onclick="showChart('videos')">Music Videos</button>
+  </nav>
+
+  <main>
+    <h2 id="chart-title">Songs Chart</h2>
+    <div id="chart"></div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
