@@ -1,1 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Year-End Charts | Open Door</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
 
+<body data-page="year-end">
+  <header class="site-header">
+    <h1>Open Door Charts</h1>
+    <p>Year-End Charts</p>
+  </header>
+
+  <nav class="nav">
+    <a href="index.html">Home</a>
+    <a href="songs.html">Songs</a>
+    <a href="albums.html">Albums</a>
+    <a href="videos.html">Music Videos</a>
+    <a href="streaming.html">SW Music</a>
+    <a href="sales.html">Sales</a>
+    <a href="radio.html">Global Airplay</a>
+    <a href="artists.html">Artists</a>
+    <a href="number-ones.html">All #1s</a>
+    <a href="year-end.html">Year-End</a>
+  </nav>
+
+  <main class="year-end-page">
+    <section class="year-end-header">
+      <h2>Year-End Charts</h2>
+      <p>The biggest entries of each year based on their total chart performance.</p>
+
+      <div class="year-end-controls">
+        <select id="yearSelect" class="year-end-select">
+          <option value="">Loading years...</option>
+        </select>
+
+        <div class="year-end-tabs">
+          <button class="year-end-tab active" data-chart="songs">Songs</button>
+          <button class="year-end-tab" data-chart="albums">Albums</button>
+          <button class="year-end-tab" data-chart="videos">Videos</button>
+          <button class="year-end-tab" data-chart="streaming">Streaming</button>
+          <button class="year-end-tab" data-chart="sales">Sales</button>
+          <button class="year-end-tab" data-chart="radio">Radio</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="yearEndStats" class="year-end-stats"></section>
+
+    <section id="yearEndList" class="year-end-list">
+      <p class="loading-message">Loading year-end chart...</p>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="config.js"></script>
+
+  <script>
+    const YEAR_END_CHART_LABELS = {
+      songs: "Songs Chart",
+      albums: "Albums Chart",
+      videos: "Music Videos Chart",
+      streaming: "SW Music Streaming Chart",
+      sales: "Sales Chart",
+      radio: "Global Airplay Chart"
+    };
+
+    const YEAR_END_METRIC_LABELS = {
+      songs: "points",
+      albums: "units",
+      videos: "views",
+      streaming: "streams",
+      sales: "sales",
+      radio: "audience"
+    };
+
+    const YEAR_END_LIMITS = {
+      songs: 100,
+      albums: 25,
+      videos: 25,
+      streaming: 50,
+      sales: 25,
+      radio: 25
+    };
+
+    const ARTIST_NAME_FIXES = {
+      "ariana grand": "Ariana Grande",
+      "arianna grande": "Ariana Grande"
+    };
+
+    const ARTIST_SPLIT_EXCEPTIONS = [
+      "Tyler, The Creator",
+      "Earth, Wind & Fire",
+      "Marina and the Diamonds",
+      "Florence + The Machine",
+      "Chloe x Halle"
+    ];
+
+    let yearEndRows = [];
+    let yearEndWeeks = {};
+    let activeYearEndChart = "songs";
+    let activeYear = "";
+
+    function clean(value) {
+      return value === undefined || value === null
+        ? ""
+        : String(value).replaceAll('"', "").trim();
+    }
+
+    function escapeHTML(value) {
+      return clean(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function escapeRegExp(value) {
+      return clean(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    function normalize(value) {
+      return clean(value).toLowerCase().replace(/\s+/g, " ");
+    }
+
+    function fixArtistName(name) {
+      const cleaned = clean(name).replace(/\s+/g, " ");
+      const key = normalize(cleaned);
+
+      return ARTIST_NAME_FIXES[key] || cleaned;
+    }
+
+    function parsePosition(value) {
+      const cleaned = clean(value).replace(/[^0-9]/g, "");
+      return cleaned ? Number(cleaned) : NaN;
+    }
+
+    function extractYear(value) {
+      const match = clean(value).match(/20\d{2}/);
+      return match ? match[0] : "";
+    }
+
+    function metricToNumber(value) {
+      const text = clean(value).toUpperCase().replace(/,/g, "");
+      const match = text.match(/[-+]?\d*\.?\d+/);
+
+      if (!match) return 0;
+
+      let number = Number(match[0]);
+
+      if (Number.isNaN(number)) return 0;
+
+      if (text.includes("B")) number *= 1000000000;
+      else if (text.includes("M")) number *= 1000000;
+      else if (text.includes("K")) number *= 1000;
+
+      return number;
+    }
+
+    function shortNumber(number, preferredUnit = "auto") {
+      if (!number || Number.isNaN(number)) return "0";
+
+      if (preferredUnit === "M") {
+        return `${(number / 1000000).toFixed(1).replace(".0", "")}M`;
+      }
+
+      if (preferredUnit === "K") {
+        return `${(number / 1000).toFixed(1).replace(".0", "")}K`;
+      }
+
+      if (number >= 1000000000) {
+        return `${(number / 1000000000).toFixed(1).replace(".0", "")}B`;
+      }
+
+      if (number >= 1000000) {
+        return `${(number / 1000000).toFixed(1).replace(".0", "")}M`;
+      }
+
+      if (number >= 1000) {
+        return `${(number / 1000).toFixed(1).replace(".0", "")}K`;
+      }
+
+      return number.toLocaleString();
+    }
+
+    function formatTotalMetric(number, chartType, score) {
+      const label = YEAR_END_METRIC_LABELS[chartType] || "points";
+
+      if (!number) {
+        return `${shortNumber(score)} chart score`;
+      }
+
+      if (chartType === "radio") {
+        return `${shortNumber(number, "M")} ${label}`;
+      }
+
+      if (chartType === "sales") {
+        return `${shortNumber(number, "K")} ${label}`;
+      }
+
+      if (chartType === "streaming") {
+        return `${shortNumber(number, "M")} ${label}`;
+      }
+
+      return `${shortNumber(number)} ${label}`;
+    }
+
+    function splitFullName(fullName) {
+      const text = clean(fullName);
+
+      if (text.includes("\n")) {
+        const parts = text.split("\n").map(clean).filter(Boolean);
+
+        if (parts.length >= 2) {
+          return {
+            title: parts[0],
+            artist: parts.slice(1).join(" ")
+          };
+        }
+      }
+
+      if (text.includes(" - ")) {
+        const parts = text.split(" - ");
+
+        if (parts.length >= 2) {
+          return {
+            title: clean(parts[0]),
+            artist: clean(parts.slice(1).join(" - "))
+          };
+        }
+      }
+
+      return {
+        title: text,
+        artist: ""
+      };
+    }
+
+    function splitArtists(rawArtist) {
+      let text = clean(rawArtist).replace(/\s+/g, " ");
+
+      if (!text) return [];
+
+      const protectedNames = new Map();
+
+      ARTIST_SPLIT_EXCEPTIONS.forEach((name, index) => {
+        const token = `__ARTIST_EXCEPTION_${index}__`;
+        const regex = new RegExp(escapeRegExp(name), "gi");
+
+        if (regex.test(text)) {
+          text = text.replace(regex, token);
+          protectedNames.set(token, name);
+        }
+      });
+
+      text = text
+        .replace(/\s*\((feat\.?|ft\.?|featuring)\s+([^)]+)\)/gi, " & $2")
+        .replace(/\s+(feat\.?|ft\.?|featuring)\s+/gi, " & ")
+        .replace(/\s+with\s+/gi, " & ")
+        .replace(/\s+x\s+/gi, " & ")
+        .replace(/\s*\/\s*/g, " & ");
+
+      const parts = text
+        .split(/\s*(?:&|\+|,)\s*/)
+        .map(part => protectedNames.get(part) || part)
+        .map(fixArtistName)
+        .filter(Boolean);
+
+      const unique = [];
+
+      parts.forEach(artist => {
+        const key = normalize(artist);
+
+        if (!unique.some(existing => normalize(existing) === key)) {
+          unique.push(artist);
+        }
+      });
+
+      return unique;
+    }
+
+    function artistURL(artist) {
+      return `artists.html?artist=${encodeURIComponent(clean(artist))}`;
+    }
+
+    function renderArtistLinks(artistRaw) {
+      const credits = splitArtists(artistRaw);
+
+      if (credits.length === 0) {
+        return escapeHTML(artistRaw);
+      }
+
+      return credits
+        .map(artist => {
+          return `<a href="${artistURL(artist)}">${escapeHTML(artist)}</a>`;
+        })
+        .join(`<span class="year-end-artist-separator"> & </span>`);
+    }
+
+    function makeEntryKey(item) {
+      return `${item.chartType}|${normalize(item.title)}|${normalize(item.artistRaw)}`;
+    }
+
+    function getChartScore(position, chartType) {
+      const limit = YEAR_END_LIMITS[chartType] || 100;
+      return Math.max(limit - position + 1, 1);
+    }
+
+    function buildWeekOrder(chartType, rows) {
+      const weeks = [];
+
+      rows
+        .filter(item => item.chartType === chartType)
+        .forEach(item => {
+          if (!weeks.includes(item.week)) {
+            weeks.push(item.week);
+          }
+        });
+
+      return weeks.reverse();
+    }
+
+    function getWeekIndex(item) {
+      const weeks = yearEndWeeks[item.chartType] || [];
+      const index = weeks.indexOf(item.week);
+
+      return index === -1 ? 999999 : index;
+    }
+
+    async function loadChartRows(chartType, url) {
+      const finalUrl = url.includes("?")
+        ? `${url}&cache=${Date.now()}`
+        : `${url}?cache=${Date.now()}`;
+
+      const response = await fetch(finalUrl);
+      const text = await response.text();
+
+      const parsed = Papa.parse(text, {
+        skipEmptyLines: true
+      });
+
+      return parsed.data
+        .map(row => {
+          const fromFullName = splitFullName(row[2]);
+
+          const title = clean(row[5]) || fromFullName.title;
+          const artistRaw = clean(row[6]) || fromFullName.artist;
+
+          const metricRaw =
+            chartType === "streaming" || chartType === "sales" || chartType === "radio"
+              ? clean(row[9])
+              : clean(row[3]);
+
+          const position = parsePosition(row[1]);
+
+          return {
+            chartType,
+            week: clean(row[0]),
+            year: extractYear(row[0]),
+            position,
+            title,
+            artistRaw,
+            cover: clean(row[8]),
+            metricRaw,
+            metricNumber: metricToNumber(metricRaw),
+            chartScore: !Number.isNaN(position) ? getChartScore(position, chartType) : 0
+          };
+        })
+        .filter(item => {
+          return (
+            item.week &&
+            item.year &&
+            !Number.isNaN(item.position) &&
+            item.position > 0 &&
+            item.title &&
+            item.artistRaw
+          );
+        });
+    }
+
+    async function loadAllYearEndRows() {
+      const chartEntries = Object.entries(SHEETS);
+
+      const results = await Promise.all(
+        chartEntries.map(([chartType, url]) => {
+          return loadChartRows(chartType, url).catch(error => {
+            console.error(`Could not load ${chartType}`, error);
+            return [];
+          });
+        })
+      );
+
+      yearEndRows = results.flat();
+
+      Object.keys(SHEETS).forEach(chartType => {
+        yearEndWeeks[chartType] = buildWeekOrder(chartType, yearEndRows);
+      });
+    }
+
+    function getAvailableYears() {
+      const years = [...new Set(yearEndRows.map(item => item.year).filter(Boolean))];
+
+      return years.sort((a, b) => Number(b) - Number(a));
+    }
+
+    function populateYearDropdown() {
+      const yearSelect = document.getElementById("yearSelect");
+      const years = getAvailableYears();
+
+      if (!yearSelect) return;
+
+      if (years.length === 0) {
+        yearSelect.innerHTML = `<option value="">No years found</option>`;
+        return;
+      }
+
+      activeYear = activeYear || years[0];
+
+      yearSelect.innerHTML = years
+        .map(year => {
+          const selected = year === activeYear ? "selected" : "";
+          return `<option value="${escapeHTML(year)}" ${selected}>${escapeHTML(year)}</option>`;
+        })
+        .join("");
+    }
+
+    function buildYearEndEntries(chartType, year) {
+      const rows = yearEndRows.filter(item => {
+        return item.chartType === chartType && item.year === year;
+      });
+
+      const map = new Map();
+
+      rows.forEach(item => {
+        const key = makeEntryKey(item);
+
+        if (!map.has(key)) {
+          map.set(key, {
+            chartType: item.chartType,
+            title: item.title,
+            artistRaw: item.artistRaw,
+            cover: item.cover,
+            rows: []
+          });
+        }
+
+        const entry = map.get(key);
+
+        entry.rows.push(item);
+
+        if (!entry.cover && item.cover) {
+          entry.cover = item.cover;
+        }
+      });
+
+      const entries = Array.from(map.values()).map(entry => {
+        const rowsNewestFirst = [...entry.rows].sort((a, b) => {
+          return getWeekIndex(a) - getWeekIndex(b);
+        });
+
+        const rowsOldestFirst = [...entry.rows].sort((a, b) => {
+          return getWeekIndex(b) - getWeekIndex(a);
+        });
+
+        const bestPeak = Math.min(...entry.rows.map(row => row.position));
+
+        const peakRows = entry.rows
+          .filter(row => row.position === bestPeak)
+          .sort((a, b) => getWeekIndex(b) - getWeekIndex(a));
+
+        const totalMetric = entry.rows.reduce((sum, row) => sum + (row.metricNumber || 0), 0);
+        const totalScore = entry.rows.reduce((sum, row) => sum + (row.chartScore || 0), 0);
+
+        return {
+          ...entry,
+          totalMetric,
+          totalScore,
+          bestPeak,
+          totalWeeks: entry.rows.length,
+          firstWeek: rowsOldestFirst[0] ? rowsOldestFirst[0].week : "—",
+          lastWeek: rowsNewestFirst[0] ? rowsNewestFirst[0].week : "—",
+          peakDate: peakRows[0] ? peakRows[0].week : "—",
+          weeksAtPeak: peakRows.length,
+          hitNumberOne: bestPeak === 1
+        };
+      });
+
+      const hasMetric = entries.some(entry => entry.totalMetric > 0);
+
+      return entries.sort((a, b) => {
+        if (hasMetric && b.totalMetric !== a.totalMetric) {
+          return b.totalMetric - a.totalMetric;
+        }
+
+        if (b.totalScore !== a.totalScore) {
+          return b.totalScore - a.totalScore;
+        }
+
+        if (a.bestPeak !== b.bestPeak) {
+          return a.bestPeak - b.bestPeak;
+        }
+
+        return b.totalWeeks - a.totalWeeks;
+      });
+    }
+
+    function renderYearEndStats(entries, chartType, year) {
+      const statsBox = document.getElementById("yearEndStats");
+
+      if (!statsBox) return;
+
+      const totalEntries = entries.length;
+      const totalWeeks = entries.reduce((sum, entry) => sum + entry.totalWeeks, 0);
+      const numberOnes = entries.filter(entry => entry.hitNumberOne).length;
+      const chartLabel = YEAR_END_CHART_LABELS[chartType] || chartType;
+
+      statsBox.innerHTML = `
+        <div>
+          <strong>${escapeHTML(totalEntries)}</strong>
+          <span>Year-End Entries</span>
+        </div>
+
+        <div>
+          <strong>${escapeHTML(numberOnes)}</strong>
+          <span>Reached #1</span>
+        </div>
+
+        <div>
+          <strong>${escapeHTML(totalWeeks)}</strong>
+          <span>Total Chart Weeks</span>
+        </div>
+
+        <div>
+          <strong>${escapeHTML(year)}</strong>
+          <span>${escapeHTML(chartLabel)}</span>
+        </div>
+      `;
+    }
+
+    function renderYearEndChart() {
+      const list = document.getElementById("yearEndList");
+
+      if (!list) return;
+
+      const entries = buildYearEndEntries(activeYearEndChart, activeYear);
+
+      renderYearEndStats(entries, activeYearEndChart, activeYear);
+
+      if (entries.length === 0) {
+        list.innerHTML = `
+          <div class="year-end-empty">
+            <h3>No entries found.</h3>
+            <p>This chart does not have data for ${escapeHTML(activeYear)}.</p>
+          </div>
+        `;
+
+        return;
+      }
+
+      list.innerHTML = entries.map((entry, index) => {
+        const totalDisplay = formatTotalMetric(entry.totalMetric, entry.chartType, entry.totalScore);
+
+        return `
+          <article class="year-end-card">
+            <div class="year-end-rank">#${index + 1}</div>
+
+            ${
+              entry.cover
+                ? `<img class="year-end-cover" src="${escapeHTML(entry.cover)}" alt="${escapeHTML(entry.title)} cover" onerror="this.style.display='none'">`
+                : `<div class="year-end-cover placeholder"></div>`
+            }
+
+            <div class="year-end-main">
+              <h3>${escapeHTML(entry.title)}</h3>
+              <div class="year-end-artists">${renderArtistLinks(entry.artistRaw)}</div>
+
+              <div class="year-end-details">
+                <span>Total: ${escapeHTML(totalDisplay)}</span>
+                <span>Peak: #${escapeHTML(entry.bestPeak)}</span>
+                <span>${escapeHTML(entry.totalWeeks)} weeks</span>
+              </div>
+
+              <div class="year-end-dates">
+                <span>First in year: ${escapeHTML(entry.firstWeek)}</span>
+                <span>Last in year: ${escapeHTML(entry.lastWeek)}</span>
+                <span>Peak date: ${escapeHTML(entry.peakDate)}</span>
+                <span>${escapeHTML(entry.weeksAtPeak)} weeks at peak</span>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function activateYearEndControls() {
+      const yearSelect = document.getElementById("yearSelect");
+
+      if (yearSelect) {
+        yearSelect.addEventListener("change", () => {
+          activeYear = yearSelect.value;
+          renderYearEndChart();
+        });
+      }
+
+      document.querySelectorAll(".year-end-tab").forEach(button => {
+        button.addEventListener("click", () => {
+          activeYearEndChart = button.dataset.chart;
+
+          document.querySelectorAll(".year-end-tab").forEach(tab => {
+            tab.classList.remove("active");
+          });
+
+          button.classList.add("active");
+
+          renderYearEndChart();
+        });
+      });
+    }
+
+    async function initYearEndPage() {
+      try {
+        await loadAllYearEndRows();
+
+        const years = getAvailableYears();
+        activeYear = years[0] || "";
+
+        populateYearDropdown();
+        activateYearEndControls();
+        renderYearEndChart();
+      } catch (error) {
+        const list = document.getElementById("yearEndList");
+
+        if (list) {
+          list.innerHTML = `
+            <div class="year-end-empty">
+              <h3>Could not load Year-End chart.</h3>
+              <p>Check your Google Sheets links in config.js.</p>
+            </div>
+          `;
+        }
+
+        console.error(error);
+      }
+    }
+
+    initYearEndPage();
+  </script>
+</body>
+</html>
