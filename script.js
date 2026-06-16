@@ -242,8 +242,8 @@ function activateButtons() {
 
 async function initSongsPage() {
   try {
-    allRows = await loadCSV(SHEETS.songs);
-    validWeeks = getValidWeeks(allRows);
+    const chartType = document.body.dataset.chart || "songs";
+allRows = await loadCSV(SHEETS[chartType]);
 
     const select = document.getElementById("weekSelect");
     select.innerHTML = "";
