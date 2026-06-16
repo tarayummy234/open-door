@@ -68,6 +68,8 @@ function makeId(title, artist) {
 }
 
 async function loadCSV(url) {
+  const chartType = getChartType();
+
   const finalUrl = url.includes("?")
     ? `${url}&cache=${Date.now()}`
     : `${url}?cache=${Date.now()}`;
@@ -81,16 +83,26 @@ async function loadCSV(url) {
 
   return parsed.data
     .map((row, index) => {
+      const metricColumn =
+        chartType === "streaming" ||
+        chartType === "sales" ||
+        chartType === "radio"
+          ? row[9]   // Column J
+          : row[3];  // Column D
+
       return {
         index,
-        week: clean(row[0]),
-        position: parsePosition(row[1]),
-        fullName: clean(row[2]),
-        metric: parseMetric(row[3]),
-        title: clean(row[5]),
-        artist: clean(row[6]),
-        cover: clean(row[8]),
-        audio: clean(row[9])
+        week: clean(row[0]),          // Column A
+        position: parsePosition(row[1]), // Column B
+        fullName: clean(row[2]),      // Column C
+        metric: parseMetric(metricColumn),
+        title: clean(row[5]),         // Column F
+        artist: clean(row[6]),        // Column G
+        cover: clean(row[8]),         // Column I
+        audio:
+          chartType === "songs"
+            ? clean(row[9])           // Column J only works as audio for songs
+            : ""
       };
     })
     .filter(item => {
