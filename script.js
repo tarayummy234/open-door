@@ -1,21 +1,49 @@
 let allRows = [];
 
+function clean(value) {
+  return value ? String(value).replaceAll('"', "").trim() : "";
+}
+
+function escapeHTML(value) {
+  return clean(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function makeId(title, artist) {
+  return `${title}-${artist}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 async function loadCSV(url) {
   const response = await fetch(url);
   const text = await response.text();
 
-  return text
-    .trim()
-    .split("\n")
-    .map(row => row.split(","));
-}
+  const parsed = Papa.parse(text, {
+    skipEmptyLines: true
+  });
 
-function clean(value) {
-  return value ? value.replaceAll('"', "").trim() : "";
+  return parsed.data.filter(row => {
+    const position = Number(clean(row[1]));
+    return !isNaN(position);
+  });
 }
 
 function getWeeks(rows) {
-  const weeks = [...new Set(rows.map(row => clean(row[0])).filter(Boolean))];
+  const weeks = [];
+
+  rows.forEach(row => {
+    const week = clean(row[0]);
+    if (week && !weeks.includes(week)) {
+      weeks.push(week);
+    }
+  });
+
   return weeks.reverse();
 }
 
@@ -24,22 +52,53 @@ function getPreviousWeek(currentWeek, weeks) {
   return weeks[index + 1] || null;
 }
 
-function movementLabel(current, previousRows) {
-  const title = clean(current[5]);
-  const artist = clean(current[6]);
-  const currentPos = Number(clean(current[1]));
+function getMovement(currentRow, previousRows) {
+  const title = clean(currentRow[5]);
+  const artist = clean(currentRow[6]);
+  const currentPos = Number(clean(currentRow[1]));
 
   const previous = previousRows.find(row =>
-    clean(row[5]) === title && clean(row[6]) === artist
+    clean(row[5]).toLowerCase() === title.toLowerCase() &&
+    clean(row[6]).toLowerCase() === artist.toLowerCase()
   );
 
-  if (!previous) return `<span class="tag new">NEW</span>`;
+  const appearedBefore = allRows.some(row =>
+    clean(row[5]).toLowerCase() === title.toLowerCase() &&
+    clean(row[6]).toLowerCase() === artist.toLowerCase() &&
+    clean(row[0]) !== clean(currentRow[0])
+  );
+
+  if (!previous && appearedBefore) {
+    return `<span class="tag reentry">RE-ENTRY</span>`;
+  }
+
+  if (!previous) {
+    return `<span class="tag new">NEW</span>`;
+  }
 
   const oldPos = Number(clean(previous[1]));
 
-  if (currentPos < oldPos) return `<span class="move up">▲ ${oldPos - currentPos}</span>`;
-  if (currentPos > oldPos) return `<span class="move down">▼ ${currentPos - oldPos}</span>`;
+  if (currentPos < oldPos) {
+    return `<span class="move up">▲ ${oldPos - currentPos}</span>`;
+  }
+
+  if (currentPos > oldPos) {
+    return `<span class="move down">▼ ${currentPos - oldPos}</span>`;
+  }
+
   return `<span class="move same">▬</span>`;
+}
+
+function getChartRun(title, artist) {
+  return allRows
+    .filter(row =>
+      clean(row[5]).toLowerCase() === title.toLowerCase() &&
+      clean(row[6]).toLowerCase() === artist.toLowerCase()
+    )
+    .map(row => {
+      return `<span>${escapeHTML(row[0])}: #${escapeHTML(row[1])}</span>`;
+    })
+    .join("");
 }
 
 function renderChart(week) {
@@ -55,83 +114,118 @@ function renderChart(week) {
     : [];
 
   const chart = document.getElementById("chart");
+  const chartCount = document.getElementById("chartCount");
+
   chart.innerHTML = "";
+  chartCount.textContent = `${currentRows.length} songs · Week of ${week}`;
 
   currentRows.forEach(row => {
-    const position = clean(row[1]);
+    const position = escapeHTML(row[1]);
     const metric = clean(row[3]);
     const title = clean(row[5]);
     const artist = clean(row[6]);
     const cover = clean(row[8]);
     const audio = clean(row[9]);
+    const id = makeId(title, artist);
 
     chart.innerHTML += `
       <section class="chart-row">
         <div class="rank">#${position}</div>
 
         <div class="cover-wrap">
-          ${cover ? `<img src="${cover}" class="cover" alt="${title}">` : `<div class="cover placeholder"></div>`}
-          ${audio ? `<button class="play" onclick="playPreview('${audio}')">▶</button>` : ""}
+          ${
+            cover
+              ? `<img src="${escapeHTML(cover)}" class="cover" alt="${escapeHTML(title)}">`
+              : `<div class="cover placeholder"></div>`
+          }
+
+          ${
+            audio
+              ? `<button class="play-button" data-audio="${escapeHTML(audio)}">▶</button>`
+              : `<button class="play-button disabled" disabled>▶</button>`
+          }
         </div>
 
         <div class="song-info">
-          <h3>${title}</h3>
-          <p>${artist}</p>
+          <h3>${escapeHTML(title)}</h3>
+          <p>${escapeHTML(artist)}</p>
           <small>${Number(metric).toLocaleString()} points</small>
         </div>
 
         <div class="movement">
-          ${movementLabel(row, previousRows)}
+          ${getMovement(row, previousRows)}
         </div>
 
-        <button class="expand" onclick="toggleRun('${title.replaceAll("'", "")}-${artist.replaceAll("'", "")}')">+</button>
+        <button class="expand-button" data-run="${id}">+</button>
       </section>
 
-      <div class="chart-run" id="${title.replaceAll("'", "")}-${artist.replaceAll("'", "")}">
+      <div class="chart-run" id="${id}">
         ${getChartRun(title, artist)}
       </div>
     `;
   });
+
+  activateButtons();
 }
 
-function getChartRun(title, artist) {
-  return allRows
-    .filter(row => clean(row[5]) === title && clean(row[6]) === artist)
-    .map(row => `<span>${clean(row[0])}: #${clean(row[1])}</span>`)
-    .join("");
-}
+function activateButtons() {
+  const audioPlayer = document.getElementById("audioPlayer");
 
-function toggleRun(id) {
-  const box = document.getElementById(id);
-  box.classList.toggle("open");
-}
+  document.querySelectorAll(".play-button").forEach(button => {
+    button.addEventListener("click", () => {
+      const audioUrl = button.dataset.audio;
 
-let currentAudio = null;
+      if (!audioUrl) return;
 
-function playPreview(url) {
-  if (currentAudio) {
-    currentAudio.pause();
-  }
+      if (audioPlayer.src === audioUrl && !audioPlayer.paused) {
+        audioPlayer.pause();
+        return;
+      }
 
-  currentAudio = new Audio(url);
-  currentAudio.play();
+      audioPlayer.src = audioUrl;
+      audioPlayer.play();
+    });
+  });
+
+  document.querySelectorAll(".expand-button").forEach(button => {
+    button.addEventListener("click", () => {
+      const runId = button.dataset.run;
+      const runBox = document.getElementById(runId);
+
+      runBox.classList.toggle("open");
+      button.textContent = runBox.classList.contains("open") ? "−" : "+";
+    });
+  });
 }
 
 async function initSongsPage() {
-  allRows = await loadCSV(SHEETS.songs);
+  try {
+    allRows = await loadCSV(SHEETS.songs);
 
-  const weeks = getWeeks(allRows);
-  const select = document.getElementById("weekSelect");
+    const weeks = getWeeks(allRows);
+    const select = document.getElementById("weekSelect");
 
-  weeks.forEach(week => {
-    select.innerHTML += `<option value="${week}">${week}</option>`;
-  });
+    select.innerHTML = "";
 
-  select.addEventListener("change", () => {
-    renderChart(select.value);
-  });
+    weeks.forEach(week => {
+      select.innerHTML += `<option value="${escapeHTML(week)}">${escapeHTML(week)}</option>`;
+    });
 
-  renderChart(weeks[0]);
+    select.addEventListener("change", () => {
+      renderChart(select.value);
+    });
+
+    renderChart(weeks[0]);
+  } catch (error) {
+    document.getElementById("chart").innerHTML = `
+      <div class="error">
+        <h3>Chart could not load.</h3>
+        <p>Check that your Google Sheet is published as CSV and that the link in config.js is correct.</p>
+      </div>
+    `;
+
+    console.error(error);
+  }
 }
 
 if (document.getElementById("weekSelect")) {
