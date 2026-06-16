@@ -1053,3 +1053,198 @@ nav a:hover {
     text-align: left;
   }
 }
+
+.year-end-page {
+  max-width: 1150px;
+}
+
+.year-end-header {
+  background: #181824;
+  border-radius: 18px;
+  padding: 22px;
+  margin-bottom: 20px;
+}
+
+.year-end-header h2 {
+  margin-top: 0;
+}
+
+.year-end-header p {
+  color: #bbb;
+}
+
+.year-end-controls {
+  display: grid;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.year-end-select {
+  width: 100%;
+  background: #101018;
+  color: white;
+  border: 1px solid #33334a;
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 16px;
+}
+
+.year-end-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.year-end-tab {
+  background: #101018;
+  color: white;
+  border: 1px solid #33334a;
+  border-radius: 999px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.year-end-tab:hover {
+  background: #242433;
+}
+
+.year-end-tab.active {
+  background: #ff2d95;
+  border-color: #ff2d95;
+}
+
+.year-end-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.year-end-stats div {
+  background: #181824;
+  border-radius: 16px;
+  padding: 18px;
+  text-align: center;
+}
+
+.year-end-stats strong {
+  display: block;
+  color: #ff2d95;
+  font-size: 28px;
+}
+
+.year-end-stats span {
+  color: #bbb;
+  font-size: 13px;
+}
+
+.year-end-list {
+  display: grid;
+  gap: 12px;
+}
+
+.year-end-card {
+  display: grid;
+  grid-template-columns: 58px 78px 1fr;
+  gap: 14px;
+  align-items: center;
+  background: #181824;
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.year-end-rank {
+  color: #ff2d95;
+  font-weight: bold;
+  font-size: 22px;
+  text-align: center;
+}
+
+.year-end-cover {
+  width: 78px;
+  height: 78px;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #2a2a38;
+}
+
+.year-end-main h3 {
+  margin: 0 0 5px;
+}
+
+.year-end-artists {
+  color: #bbb;
+  margin-bottom: 10px;
+}
+
+.year-end-artists a {
+  color: #bbb;
+  text-decoration: none;
+}
+
+.year-end-artists a:hover {
+  color: #ff2d95;
+  text-decoration: underline;
+}
+
+.year-end-artist-separator {
+  color: #666;
+  margin: 0 4px;
+}
+
+.year-end-details,
+.year-end-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.year-end-details {
+  margin-bottom: 8px;
+}
+
+.year-end-details span {
+  background: #222231;
+  color: #fff;
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.year-end-dates span {
+  background: #101018;
+  color: #ccc;
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 12px;
+}
+
+.year-end-empty,
+.loading-message {
+  background: #181824;
+  color: #bbb;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+@media (max-width: 750px) {
+  .year-end-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .year-end-card {
+    grid-template-columns: 48px 66px 1fr;
+  }
+
+  .year-end-cover {
+    width: 66px;
+    height: 66px;
+  }
+
+  .year-end-details,
+  .year-end-dates {
+    grid-column: 1 / -1;
+  }
+}
