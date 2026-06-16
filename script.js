@@ -1,4 +1,5 @@
 let allRows = [];
+let validWeeks = [];
 
 function clean(value) {
   return value ? String(value).replaceAll('"', "").trim() : "";
@@ -13,6 +14,21 @@ function escapeHTML(value) {
     .replaceAll("'", "&#039;");
 }
 
+function parsePosition(value) {
+  const cleaned = clean(value).replace(/[^0-9]/g, "");
+  return cleaned ? Number(cleaned) : NaN;
+}
+
+function parseMetric(value) {
+  const cleaned = clean(value).replace(/,/g, "");
+  const number = Number(cleaned);
+  return isNaN(number) ? "" : number;
+}
+
+function makeKey(title, artist) {
+  return `${clean(title).toLowerCase()}|${clean(artist).toLowerCase()}`;
+}
+
 function makeId(title, artist) {
   return `${title}-${artist}`
     .toLowerCase()
@@ -21,52 +37,79 @@ function makeId(title, artist) {
 }
 
 async function loadCSV(url) {
-  const response = await fetch(url);
+  const finalUrl = url.includes("?") ? `${url}&cache=${Date.now()}` : `${url}?cache=${Date.now()}`;
+  const response = await fetch(finalUrl);
   const text = await response.text();
 
   const parsed = Papa.parse(text, {
     skipEmptyLines: true
   });
 
-  return parsed.data.filter(row => {
-    const position = Number(clean(row[1]));
-    return !isNaN(position);
-  });
+  return parsed.data
+    .map((row, index) => {
+      return {
+        index,
+        week: clean(row[0]),
+        position: parsePosition(row[1]),
+        fullName: clean(row[2]),
+        metric: parseMetric(row[3]),
+        title: clean(row[5]),
+        artist: clean(row[6]),
+        cover: clean(row[8]),
+        audio: clean(row[9])
+      };
+    })
+    .filter(item => {
+      return (
+        item.week &&
+        !isNaN(item.position) &&
+        item.position > 0 &&
+        item.title &&
+        item.artist
+      );
+    });
 }
 
-function getWeeks(rows) {
+function getValidWeeks(rows) {
+  const counts = {};
+
+  rows.forEach(item => {
+    counts[item.week] = (counts[item.week] || 0) + 1;
+  });
+
   const weeks = [];
 
-  rows.forEach(row => {
-    const week = clean(row[0]);
-    if (week && !weeks.includes(week)) {
-      weeks.push(week);
+  rows.forEach(item => {
+    if (!weeks.includes(item.week) && counts[item.week] >= 10) {
+      weeks.push(item.week);
     }
   });
 
   return weeks.reverse();
 }
 
-function getPreviousWeek(currentWeek, weeks) {
-  const index = weeks.indexOf(currentWeek);
-  return weeks[index + 1] || null;
+function getPreviousWeek(currentWeek) {
+  const index = validWeeks.indexOf(currentWeek);
+  return validWeeks[index + 1] || null;
 }
 
-function getMovement(currentRow, previousRows) {
-  const title = clean(currentRow[5]);
-  const artist = clean(currentRow[6]);
-  const currentPos = Number(clean(currentRow[1]));
+function getMovement(currentItem, previousRows) {
+  const currentKey = makeKey(currentItem.title, currentItem.artist);
 
-  const previous = previousRows.find(row =>
-    clean(row[5]).toLowerCase() === title.toLowerCase() &&
-    clean(row[6]).toLowerCase() === artist.toLowerCase()
-  );
+  const previous = previousRows.find(item => {
+    return makeKey(item.title, item.artist) === currentKey;
+  });
 
-  const appearedBefore = allRows.some(row =>
-    clean(row[5]).toLowerCase() === title.toLowerCase() &&
-    clean(row[6]).toLowerCase() === artist.toLowerCase() &&
-    clean(row[0]) !== clean(currentRow[0])
-  );
+  const currentWeekIndex = validWeeks.indexOf(currentItem.week);
+
+  const appearedBefore = allRows.some(item => {
+    const itemWeekIndex = validWeeks.indexOf(item.week);
+
+    return (
+      makeKey(item.title, item.artist) === currentKey &&
+      itemWeekIndex > currentWeekIndex
+    );
+  });
 
   if (!previous && appearedBefore) {
     return `<span class="tag reentry">RE-ENTRY</span>`;
@@ -76,41 +119,46 @@ function getMovement(currentRow, previousRows) {
     return `<span class="tag new">NEW</span>`;
   }
 
-  const oldPos = Number(clean(previous[1]));
-
-  if (currentPos < oldPos) {
-    return `<span class="move up">▲ ${oldPos - currentPos}</span>`;
+  if (currentItem.position < previous.position) {
+    return `<span class="move up">▲ ${previous.position - currentItem.position}</span>`;
   }
 
-  if (currentPos > oldPos) {
-    return `<span class="move down">▼ ${currentPos - oldPos}</span>`;
+  if (currentItem.position > previous.position) {
+    return `<span class="move down">▼ ${currentItem.position - previous.position}</span>`;
   }
 
   return `<span class="move same">▬</span>`;
 }
 
 function getChartRun(title, artist) {
-  return allRows
-    .filter(row =>
-      clean(row[5]).toLowerCase() === title.toLowerCase() &&
-      clean(row[6]).toLowerCase() === artist.toLowerCase()
-    )
-    .map(row => {
-      return `<span>${escapeHTML(row[0])}: #${escapeHTML(row[1])}</span>`;
+  const songKey = makeKey(title, artist);
+
+  const run = allRows
+    .filter(item => makeKey(item.title, item.artist) === songKey)
+    .sort((a, b) => {
+      return validWeeks.indexOf(a.week) - validWeeks.indexOf(b.week);
+    });
+
+  if (run.length === 0) {
+    return `<span>No chart history found.</span>`;
+  }
+
+  return run
+    .map(item => {
+      return `<span>${escapeHTML(item.week)}: #${escapeHTML(item.position)}</span>`;
     })
     .join("");
 }
 
 function renderChart(week) {
-  const weeks = getWeeks(allRows);
-  const previousWeek = getPreviousWeek(week, weeks);
+  const previousWeek = getPreviousWeek(week);
 
   const currentRows = allRows
-    .filter(row => clean(row[0]) === week)
-    .sort((a, b) => Number(clean(a[1])) - Number(clean(b[1])));
+    .filter(item => item.week === week)
+    .sort((a, b) => a.position - b.position);
 
   const previousRows = previousWeek
-    ? allRows.filter(row => clean(row[0]) === previousWeek)
+    ? allRows.filter(item => item.week === previousWeek)
     : [];
 
   const chart = document.getElementById("chart");
@@ -119,48 +167,42 @@ function renderChart(week) {
   chart.innerHTML = "";
   chartCount.textContent = `${currentRows.length} songs · Week of ${week}`;
 
-  currentRows.forEach(row => {
-    const position = escapeHTML(row[1]);
-    const metric = clean(row[3]);
-    const title = clean(row[5]);
-    const artist = clean(row[6]);
-    const cover = clean(row[8]);
-    const audio = clean(row[9]);
-    const id = makeId(title, artist);
+  currentRows.forEach(item => {
+    const id = makeId(item.title, item.artist);
 
     chart.innerHTML += `
       <section class="chart-row">
-        <div class="rank">#${position}</div>
+        <div class="rank">#${escapeHTML(item.position)}</div>
 
         <div class="cover-wrap">
           ${
-            cover
-              ? `<img src="${escapeHTML(cover)}" class="cover" alt="${escapeHTML(title)}">`
+            item.cover
+              ? `<img src="${escapeHTML(item.cover)}" class="cover" alt="${escapeHTML(item.title)}">`
               : `<div class="cover placeholder"></div>`
           }
 
           ${
-            audio
-              ? `<button class="play-button" data-audio="${escapeHTML(audio)}">▶</button>`
+            item.audio
+              ? `<button class="play-button" data-audio="${escapeHTML(item.audio)}">▶</button>`
               : `<button class="play-button disabled" disabled>▶</button>`
           }
         </div>
 
         <div class="song-info">
-          <h3>${escapeHTML(title)}</h3>
-          <p>${escapeHTML(artist)}</p>
-          <small>${Number(metric).toLocaleString()} points</small>
+          <h3>${escapeHTML(item.title)}</h3>
+          <p>${escapeHTML(item.artist)}</p>
+          <small>${item.metric !== "" ? Number(item.metric).toLocaleString() : ""} points</small>
         </div>
 
         <div class="movement">
-          ${getMovement(row, previousRows)}
+          ${getMovement(item, previousRows)}
         </div>
 
         <button class="expand-button" data-run="${id}">+</button>
       </section>
 
       <div class="chart-run" id="${id}">
-        ${getChartRun(title, artist)}
+        ${getChartRun(item.title, item.artist)}
       </div>
     `;
   });
@@ -201,13 +243,12 @@ function activateButtons() {
 async function initSongsPage() {
   try {
     allRows = await loadCSV(SHEETS.songs);
+    validWeeks = getValidWeeks(allRows);
 
-    const weeks = getWeeks(allRows);
     const select = document.getElementById("weekSelect");
-
     select.innerHTML = "";
 
-    weeks.forEach(week => {
+    validWeeks.forEach(week => {
       select.innerHTML += `<option value="${escapeHTML(week)}">${escapeHTML(week)}</option>`;
     });
 
@@ -215,12 +256,12 @@ async function initSongsPage() {
       renderChart(select.value);
     });
 
-    renderChart(weeks[0]);
+    renderChart(validWeeks[0]);
   } catch (error) {
     document.getElementById("chart").innerHTML = `
       <div class="error">
         <h3>Chart could not load.</h3>
-        <p>Check that your Google Sheet is published as CSV and that the link in config.js is correct.</p>
+        <p>Check your Google Sheets CSV link and make sure the file is published to web.</p>
       </div>
     `;
 
