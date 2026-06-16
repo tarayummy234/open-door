@@ -881,3 +881,175 @@ nav a:hover {
     text-align: left;
   }
 }
+
+.number-ones-page {
+  max-width: 1100px;
+}
+
+.number-ones-header {
+  background: #181824;
+  border-radius: 18px;
+  padding: 22px;
+  margin-bottom: 20px;
+}
+
+.number-ones-header h2 {
+  margin-top: 0;
+}
+
+.number-ones-header p {
+  color: #bbb;
+}
+
+.number-one-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.number-one-tab {
+  background: #101018;
+  color: white;
+  border: 1px solid #33334a;
+  border-radius: 999px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.number-one-tab:hover {
+  background: #242433;
+}
+
+.number-one-tab.active {
+  background: #ff2d95;
+  border-color: #ff2d95;
+}
+
+.number-ones-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.number-ones-stats div {
+  background: #181824;
+  border-radius: 16px;
+  padding: 18px;
+  text-align: center;
+}
+
+.number-ones-stats strong {
+  display: block;
+  color: #ff2d95;
+  font-size: 28px;
+}
+
+.number-ones-stats span {
+  color: #bbb;
+  font-size: 13px;
+}
+
+.number-ones-list {
+  display: grid;
+  gap: 12px;
+}
+
+.number-one-card {
+  display: grid;
+  grid-template-columns: 54px 72px 1fr 120px;
+  gap: 14px;
+  align-items: center;
+  background: #181824;
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.number-one-rank {
+  color: #ff2d95;
+  font-weight: bold;
+  font-size: 20px;
+  text-align: center;
+}
+
+.number-one-cover {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #2a2a38;
+}
+
+.number-one-main h3 {
+  margin: 0 0 5px;
+}
+
+.number-one-main a {
+  color: #bbb;
+  text-decoration: none;
+}
+
+.number-one-main a:hover {
+  color: #ff2d95;
+  text-decoration: underline;
+}
+
+.number-one-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+.number-one-dates span {
+  background: #101018;
+  color: #ccc;
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 12px;
+}
+
+.number-one-weeks {
+  text-align: right;
+}
+
+.number-one-weeks strong {
+  display: block;
+  color: #ff2d95;
+  font-size: 30px;
+}
+
+.number-one-weeks span {
+  color: #bbb;
+  font-size: 13px;
+}
+
+.number-one-empty,
+.loading-message {
+  background: #181824;
+  color: #bbb;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+@media (max-width: 750px) {
+  .number-ones-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .number-one-card {
+    grid-template-columns: 44px 64px 1fr;
+  }
+
+  .number-one-cover {
+    width: 64px;
+    height: 64px;
+  }
+
+  .number-one-weeks {
+    grid-column: 1 / -1;
+    text-align: left;
+  }
+}
