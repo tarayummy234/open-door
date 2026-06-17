@@ -6,3 +6,5 @@ const SHEETS = {
   sales: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTxNCkmos8f9p_UzZMlNiXuzs91NgFMQ9dFcbDrq5ApIoR16sISi6mHpaTsdLxX8Dgx0pMd6Mna-VP0/pub?gid=1786310088&single=true&output=csv",
   radio: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTxNCkmos8f9p_UzZMlNiXuzs91NgFMQ9dFcbDrq5ApIoR16sISi6mHpaTsdLxX8Dgx0pMd6Mna-VP0/pub?gid=1084335573&single=true&output=csv"
 };
+
+const MANUAL_UNITS_API_URL = "https://script.google.com/macros/s/AKfycbzs6VBWubASTkTRwdOQ2UQiwfy0StJlXW5Tb12DWy3amI13ZTUnLQMsKZuSnawmN135Rg/exec";
