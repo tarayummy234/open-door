@@ -272,49 +272,56 @@
           );
         });
     }
+function combineSongUnits(streamingRows, salesRows) {
+  const map = new Map();
 
-    function combineSongUnits(streamingRows, salesRows) {
-      const map = new Map();
+  function ensureSong(row) {
+    const key = makeItemKey("song", row.title, row.artist);
 
-      function ensureSong(row) {
-        const key = makeItemKey("song", row.title, row.artist);
-
-        if (!map.has(key)) {
-          map.set(key, {
-            type: "song",
-            title: row.title,
-            artist: row.artist,
-            cover: row.cover,
-            streamingTotal: 0,
-            salesTotal: 0,
-            baseUnits: 0
-          });
-        }
-
-        const item = map.get(key);
-
-        if (!item.cover && row.cover) {
-          item.cover = row.cover;
-        }
-
-        return item;
-      }
-
-      streamingRows.forEach(row => {
-        const item = ensureSong(row);
-        item.streamingTotal += row.metricNumber || 0;
-      });
-
-      salesRows.forEach(row => {
-        const item = ensureSong(row);
-        item.salesTotal += row.metricNumber || 0;
-      });
-
-      return Array.from(map.values()).map(item => {
-        item.baseUnits = Math.round(item.salesTotal + item.streamingTotal / STREAMS_PER_SONG_UNIT);
-        return item;
+    if (!map.has(key)) {
+      map.set(key, {
+        type: "song",
+        title: row.title,
+        artist: row.artist,
+        cover: row.cover,
+        streamingPeakNumber: 0,
+        salesTotal: 0,
+        baseUnits: 0
       });
     }
+
+    const item = map.get(key);
+
+    if (!item.cover && row.cover) {
+      item.cover = row.cover;
+    }
+
+    return item;
+  }
+
+  streamingRows.forEach(row => {
+    const item = ensureSong(row);
+
+    // Use the highest streaming number instead of adding every week.
+    // This prevents inflated totals when Column J already contains large/cumulative numbers.
+    item.streamingPeakNumber = Math.max(item.streamingPeakNumber, row.metricNumber || 0);
+  });
+
+  salesRows.forEach(row => {
+    const item = ensureSong(row);
+
+    // Sales can still be added weekly because sales numbers are usually smaller.
+    item.salesTotal += row.metricNumber || 0;
+  });
+
+  return Array.from(map.values()).map(item => {
+    const streamingUnits = item.streamingPeakNumber / STREAMS_PER_SONG_UNIT;
+
+    item.baseUnits = Math.round(item.salesTotal + streamingUnits);
+
+    return item;
+  });
+}
 
     function combineAlbumUnits(albumRows) {
       const map = new Map();
