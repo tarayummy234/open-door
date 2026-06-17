@@ -1,1 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <title>Designer | Sweet 16 Charts</title>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body data-page="designer">
+  <header class="site-header">
+    <h1>Sweet 16 Charts</h1>
+    <p>Design Studio</p>
+  </header>
+
+  <main class="designer-page">
+    <section class="designer-panel">
+      <h2>Website Designer</h2>
+      <p style="color: var(--muted);">
+        Edit the look here, preview it live, then copy the CSS at the bottom into style.css.
+      </p>
+
+      <div class="designer-control">
+        <label>Website title</label>
+        <input id="siteTitleInput" type="text" value="Sweet 16 Charts" />
+      </div>
+
+      <div class="designer-control">
+        <label>Subtitle</label>
+        <input id="siteSubtitleInput" type="text" value="The official Sweet 16 music charts" />
+      </div>
+
+      <div class="designer-control">
+        <label>Background color</label>
+        <input id="bgInput" type="color" value="#000000" />
+      </div>
+
+      <div class="designer-control">
+        <label>Text color</label>
+        <input id="textInput" type="color" value="#ffffff" />
+      </div>
+
+      <div class="designer-control">
+        <label>Card color</label>
+        <input id="cardInput" type="color" value="#111111" />
+      </div>
+
+      <div class="designer-control">
+        <label>Accent color</label>
+        <input id="accentInput" type="color" value="#ffffff" />
+      </div>
+
+      <div class="designer-control">
+        <label>Border radius</label>
+        <input id="radiusInput" type="range" min="0" max="36" value="18" />
+      </div>
+
+      <div class="designer-control">
+        <label>Style preset</label>
+        <select id="presetInput">
+          <option value="classic">Classic Sweet 16</option>
+          <option value="streaming">Streaming Green</option>
+          <option value="sales">Sales Gold</option>
+          <option value="radio">Radio Blue</option>
+          <option value="videos">Video Pink</option>
+          <option value="albums">Album Purple</option>
+        </select>
+      </div>
+
+      <div class="designer-actions">
+        <button id="saveDesignButton">Save Preview</button>
+        <button id="resetDesignButton">Reset</button>
+      </div>
+    </section>
+
+    <section class="designer-preview">
+      <h2>Live Preview</h2>
+
+      <div id="previewSite" class="preview-site">
+        <div class="preview-header">
+          <h1 id="previewTitle">Sweet 16 Charts</h1>
+          <p id="previewSubtitle">The official Sweet 16 music charts</p>
+        </div>
+
+        <div class="preview-body">
+          <div class="preview-card">
+            <strong>Streaming Chart</strong>
+            <h3>Like JENNIE returns to #1</h3>
+            <p>This is how a homepage news card or chart highlight would look.</p>
+          </div>
+
+          <div class="preview-card">
+            <strong>Sales Chart</strong>
+            <h3>Ariana Grande rises in pure sales</h3>
+            <p>The third color changes based on the section you are designing.</p>
+          </div>
+
+          <div class="chart-item">
+            <div class="position">#1</div>
+
+            <div class="cover-wrap">
+              <div class="cover"></div>
+            </div>
+
+            <div class="song-info">
+              <h3>Example Song</h3>
+              <p>Example Artist</p>
+              <span class="metric">51.3M audience</span>
+            </div>
+
+            <div class="movement up">▲ 3</div>
+          </div>
+        </div>
+      </div>
+
+      <h2 style="margin-top: 22px;">CSS Export</h2>
+      <p style="color: var(--muted);">
+        Copy this into the top of style.css if you want this design permanently.
+      </p>
+
+      <textarea id="cssExport" class="css-export" readonly></textarea>
+      <button id="copyCSSButton" class="copy-button">Copy CSS</button>
+    </section>
+  </main>
+
+  <script>
+    const controls = {
+      title: document.getElementById("siteTitleInput"),
+      subtitle: document.getElementById("siteSubtitleInput"),
+      bg: document.getElementById("bgInput"),
+      text: document.getElementById("textInput"),
+      card: document.getElementById("cardInput"),
+      accent: document.getElementById("accentInput"),
+      radius: document.getElementById("radiusInput"),
+      preset: document.getElementById("presetInput")
+    };
+
+    const previewTitle = document.getElementById("previewTitle");
+    const previewSubtitle = document.getElementById("previewSubtitle");
+    const cssExport = document.getElementById("cssExport");
+
+    const presets = {
+      classic: {
+        bg: "#000000",
+        text: "#ffffff",
+        card: "#111111",
+        accent: "#ffffff"
+      },
+      streaming: {
+        bg: "#000000",
+        text: "#ffffff",
+        card: "#101010",
+        accent: "#00ff88"
+      },
+      sales: {
+        bg: "#000000",
+        text: "#ffffff",
+        card: "#101010",
+        accent: "#ffd700"
+      },
+      radio: {
+        bg: "#000000",
+        text: "#ffffff",
+        card: "#101010",
+        accent: "#3aa8ff"
+      },
+      videos: {
+        bg: "#000000",
+        text: "#ffffff",
+        card: "#101010",
+        accent: "#ff2d95"
+      },
+      albums: {
+        bg: "#000000",
+        text: "#ffffff",
+        card: "#101010",
+        accent: "#a259ff"
+      }
+    };
+
+    function hexToRGBA(hex, alpha) {
+      const cleanHex = hex.replace("#", "");
+      const bigint = parseInt(cleanHex, 16);
+
+      const r = (bigint >> 16) & 255;
+      const g = (bigint >> 8) & 255;
+      const b = bigint & 255;
+
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function getDesign() {
+      return {
+        title: controls.title.value || "Sweet 16 Charts",
+        subtitle: controls.subtitle.value || "The official Sweet 16 music charts",
+        bg: controls.bg.value,
+        text: controls.text.value,
+        card: controls.card.value,
+        accent: controls.accent.value,
+        radius: `${controls.radius.value}px`
+      };
+    }
+
+    function applyDesign() {
+      const design = getDesign();
+
+      document.documentElement.style.setProperty("--bg", design.bg);
+      document.documentElement.style.setProperty("--text", design.text);
+      document.documentElement.style.setProperty("--card", design.card);
+      document.documentElement.style.setProperty("--card-2", design.card);
+      document.documentElement.style.setProperty("--accent", design.accent);
+      document.documentElement.style.setProperty("--accent-soft", hexToRGBA(design.accent, 0.18));
+      document.documentElement.style.setProperty("--radius", design.radius);
+
+      previewTitle.textContent = design.title;
+      previewSubtitle.textContent = design.subtitle;
+
+      cssExport.value = `:root {
+  --bg: ${design.bg};
+  --bg-soft: #080808;
+  --card: ${design.card};
+  --card-2: ${design.card};
+  --text: ${design.text};
+  --muted: #b7b7b7;
+  --border: #2a2a2a;
+  --accent: ${design.accent};
+  --accent-soft: ${hexToRGBA(design.accent, 0.18)};
+  --radius: ${design.radius};
+  --shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+  --font-main: Arial, Helvetica, sans-serif;
+}`;
+    }
+
+    function saveDesign() {
+      localStorage.setItem("sweet16Design", JSON.stringify(getDesign()));
+      alert("Design saved in this browser.");
+    }
+
+    function loadSavedDesign() {
+      const saved = localStorage.getItem("sweet16Design");
+
+      if (!saved) return;
+
+      try {
+        const design = JSON.parse(saved);
+
+        controls.title.value = design.title || "Sweet 16 Charts";
+        controls.subtitle.value = design.subtitle || "The official Sweet 16 music charts";
+        controls.bg.value = design.bg || "#000000";
+        controls.text.value = design.text || "#ffffff";
+        controls.card.value = design.card || "#111111";
+        controls.accent.value = design.accent || "#ffffff";
+        controls.radius.value = parseInt(design.radius) || 18;
+      } catch {
+        return;
+      }
+    }
+
+    Object.values(controls).forEach(control => {
+      control.addEventListener("input", applyDesign);
+      control.addEventListener("change", applyDesign);
+    });
+
+    controls.preset.addEventListener("change", () => {
+      const preset = presets[controls.preset.value];
+
+      if (!preset) return;
+
+      controls.bg.value = preset.bg;
+      controls.text.value = preset.text;
+      controls.card.value = preset.card;
+      controls.accent.value = preset.accent;
+
+      applyDesign();
+    });
+
+    document.getElementById("saveDesignButton").addEventListener("click", saveDesign);
+
+    document.getElementById("resetDesignButton").addEventListener("click", () => {
+      localStorage.removeItem("sweet16Design");
+
+      controls.title.value = "Sweet 16 Charts";
+      controls.subtitle.value = "The official Sweet 16 music charts";
+      controls.bg.value = "#000000";
+      controls.text.value = "#ffffff";
+      controls.card.value = "#111111";
+      controls.accent.value = "#ffffff";
+      controls.radius.value = 18;
+      controls.preset.value = "classic";
+
+      applyDesign();
+    });
+
+    document.getElementById("copyCSSButton").addEventListener("click", async () => {
+      await navigator.clipboard.writeText(cssExport.value);
+      alert("CSS copied.");
+    });
+
+    loadSavedDesign();
+    applyDesign();
+  </script>
+</body>
+</html>
