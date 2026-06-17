@@ -172,10 +172,10 @@
     }
 
     .unit-buttons {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
 
     .unit-buttons button,
     .admin-reset-button {
@@ -191,6 +191,12 @@
     .unit-buttons button:hover,
     .admin-reset-button:hover {
       filter: brightness(1.2);
+    }
+
+    .unit-buttons button:disabled,
+    .admin-reset-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
     .add-unit {
@@ -225,16 +231,18 @@
       border-bottom: none;
     }
 
-    .admin-export {
-      width: 100%;
-      min-height: 150px;
-      background: #101018;
-      color: white;
-      border: 1px solid #33334a;
-      border-radius: 12px;
-      padding: 12px;
-      font-family: monospace;
+    .admin-status {
+      color: #bbb;
       margin-top: 12px;
+      font-size: 14px;
+    }
+
+    .admin-status.good {
+      color: #00ff88;
+    }
+
+    .admin-status.bad {
+      color: #ff6b6b;
     }
 
     @media (max-width: 750px) {
@@ -270,7 +278,7 @@
   <main class="admin-page">
     <div class="admin-warning">
       This admin page is hidden. Do not add it to the public navigation.
-      For now, changes save only in this browser.
+      Unit changes now save to your Google Sheet tab: <strong>Manual_Units</strong>.
     </div>
 
     <section class="admin-card">
@@ -295,6 +303,7 @@
         </button>
       </div>
 
+      <div id="adminStatus" class="admin-status"></div>
       <div id="adminResults" class="admin-results"></div>
     </section>
 
@@ -306,26 +315,22 @@
       <h3>Recent Manual Unit Changes</h3>
       <div id="adminLog" class="admin-log"></div>
     </section>
-
-    <section class="admin-card">
-      <h3>Export Manual Units</h3>
-      <p>This is the manual unit data saved in your browser.</p>
-      <textarea id="adminExport" class="admin-export" readonly></textarea>
-    </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="config.js"></script>
 
   <script>
-    const ADMIN_STORAGE_KEY = "openDoorManualUnits";
-    const ADMIN_LOG_KEY = "openDoorManualUnitsLog";
+    const ADMIN_TOKEN = "SW16adminpass";
     const SONG_FINAL_UNIT_MULTIPLIER = 0.25;
 
     let adminRows = [];
     let selectedItem = null;
     let adminLoaded = false;
     let adminLoading = false;
+    let manualUnitsData = {};
+    let adminLog = [];
+    let isSaving = false;
 
     function clean(value) {
       return value === undefined || value === null
@@ -386,6 +391,14 @@
       return number.toLocaleString();
     }
 
+    function setStatus(message, type = "") {
+      const status = document.getElementById("adminStatus");
+      if (!status) return;
+
+      status.className = `admin-status ${type}`;
+      status.textContent = message;
+    }
+
     function splitFullName(fullName) {
       const text = clean(fullName);
 
@@ -421,44 +434,14 @@
       return `${type}|${normalize(title)}|${normalize(artist)}`;
     }
 
-    function getManualUnitsData() {
-      try {
-        return JSON.parse(localStorage.getItem(ADMIN_STORAGE_KEY)) || {};
-      } catch {
-        return {};
-      }
-    }
-
-    function saveManualUnitsData(data) {
-      localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(data));
-    }
-
-    function getAdminLog() {
-      try {
-        return JSON.parse(localStorage.getItem(ADMIN_LOG_KEY)) || [];
-      } catch {
-        return [];
-      }
-    }
-
-    function saveAdminLog(log) {
-      localStorage.setItem(ADMIN_LOG_KEY, JSON.stringify(log.slice(0, 50)));
-    }
-
     function getManualUnits(item) {
-      const data = getManualUnitsData();
       const key = makeItemKey(item.type, item.title, item.artist);
-
-      return data[key] || 0;
+      return manualUnitsData[key] || 0;
     }
 
-    function setManualUnits(item, amount) {
-      const data = getManualUnitsData();
+    function setManualUnitsInMemory(item, amount) {
       const key = makeItemKey(item.type, item.title, item.artist);
-
-      data[key] = amount;
-
-      saveManualUnitsData(data);
+      manualUnitsData[key] = amount;
     }
 
     function getRawFinalUnits(item) {
@@ -475,20 +458,92 @@
       return Math.round(rawFinalUnits);
     }
 
-    function addLog(item, change, newManualTotal) {
-      const log = getAdminLog();
+    function jsonpRequest(params) {
+      return new Promise((resolve, reject) => {
+        if (typeof MANUAL_UNITS_API_URL === "undefined" || !MANUAL_UNITS_API_URL) {
+          reject(new Error("MANUAL_UNITS_API_URL is missing in config.js"));
+          return;
+        }
 
-      log.unshift({
+        const callbackName = `jsonpCallback_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+        const url = new URL(MANUAL_UNITS_API_URL);
+
+        Object.entries(params).forEach(([key, value]) => {
+          url.searchParams.set(key, value);
+        });
+
+        url.searchParams.set("callback", callbackName);
+
+        const script = document.createElement("script");
+
+        const timeout = setTimeout(() => {
+          cleanup();
+          reject(new Error("Request timed out"));
+        }, 20000);
+
+        function cleanup() {
+          clearTimeout(timeout);
+          delete window[callbackName];
+          script.remove();
+        }
+
+        window[callbackName] = data => {
+          cleanup();
+
+          if (!data || data.success === false) {
+            reject(new Error(data && data.error ? data.error : "Request failed"));
+            return;
+          }
+
+          resolve(data);
+        };
+
+        script.onerror = () => {
+          cleanup();
+          reject(new Error("Could not connect to Manual_Units API"));
+        };
+
+        script.src = url.toString();
+        document.body.appendChild(script);
+      });
+    }
+
+    async function loadManualUnitsFromSheet() {
+      const response = await jsonpRequest({
+        action: "list"
+      });
+
+      manualUnitsData = response.data || {};
+    }
+
+    async function updateManualUnitsOnSheet(item, change) {
+      const response = await jsonpRequest({
+        action: "update",
+        token: ADMIN_TOKEN,
         type: item.type,
         title: item.title,
         artist: item.artist,
-        change,
-        newManualTotal,
-        finalUnits: getFinalUnits(item),
-        date: new Date().toLocaleString()
+        change
       });
 
-      saveAdminLog(log);
+      setManualUnitsInMemory(item, Number(response.manualUnits) || 0);
+
+      return response;
+    }
+
+    async function setManualUnitsOnSheet(item, amount) {
+      const response = await jsonpRequest({
+        action: "set",
+        token: ADMIN_TOKEN,
+        type: item.type,
+        title: item.title,
+        artist: item.artist,
+        amount
+      });
+
+      setManualUnitsInMemory(item, Number(response.manualUnits) || 0);
+
+      return response;
     }
 
     async function loadCSV(url, chartType) {
@@ -624,12 +679,23 @@
 
       if (!adminLoaded) {
         adminLoading = true;
+        resultsBox.innerHTML = `<p style="color:#bbb;">Loading songs, albums, and manual units...</p>`;
+        setStatus("Loading data from Google Sheets...");
 
-        resultsBox.innerHTML = `<p style="color:#bbb;">Loading songs and albums...</p>`;
+        try {
+          await Promise.all([
+            loadAdminItems(),
+            loadManualUnitsFromSheet()
+          ]);
 
-        await loadAdminItems();
+          adminLoaded = true;
+          setStatus("Manual units loaded from Google Sheets.", "good");
+        } catch (error) {
+          console.error(error);
+          setStatus(error.message, "bad");
+          resultsBox.innerHTML = `<p style="color:#ff6b6b;">Could not load admin data. Check config.js and Apps Script deployment.</p>`;
+        }
 
-        adminLoaded = true;
         adminLoading = false;
       }
 
@@ -701,31 +767,78 @@
       });
     }
 
-    function adjustUnits(amount) {
-      if (!selectedItem) return;
-
-      const currentManual = getManualUnits(selectedItem);
-      const nextManual = currentManual + amount;
-
-      setManualUnits(selectedItem, nextManual);
-      addLog(selectedItem, amount, nextManual);
-
-      renderSelectedItem();
-      renderResults();
-      renderLog();
-      renderExport();
+    function setButtonsDisabled(disabled) {
+      document.querySelectorAll(".unit-buttons button, .admin-reset-button").forEach(button => {
+        button.disabled = disabled;
+      });
     }
 
-    function resetManualUnits() {
-      if (!selectedItem) return;
+    async function adjustUnits(amount) {
+      if (!selectedItem || isSaving) return;
 
-      setManualUnits(selectedItem, 0);
-      addLog(selectedItem, "RESET", 0);
+      isSaving = true;
+      setButtonsDisabled(true);
+      setStatus("Saving unit change to Google Sheets...");
 
-      renderSelectedItem();
-      renderResults();
-      renderLog();
-      renderExport();
+      try {
+        const response = await updateManualUnitsOnSheet(selectedItem, amount);
+
+        adminLog.unshift({
+          type: selectedItem.type,
+          title: selectedItem.title,
+          artist: selectedItem.artist,
+          change: amount,
+          manualUnits: response.manualUnits,
+          date: new Date().toLocaleString()
+        });
+
+        adminLog = adminLog.slice(0, 50);
+
+        renderSelectedItem();
+        renderResults();
+        renderLog();
+        setStatus("Saved to Manual_Units Google Sheet.", "good");
+      } catch (error) {
+        console.error(error);
+        setStatus(error.message, "bad");
+      }
+
+      isSaving = false;
+      setButtonsDisabled(false);
+    }
+
+    async function resetManualUnits() {
+      if (!selectedItem || isSaving) return;
+
+      isSaving = true;
+      setButtonsDisabled(true);
+      setStatus("Resetting manual units in Google Sheets...");
+
+      try {
+        const response = await setManualUnitsOnSheet(selectedItem, 0);
+
+        adminLog.unshift({
+          type: selectedItem.type,
+          title: selectedItem.title,
+          artist: selectedItem.artist,
+          change: "RESET",
+          manualUnits: response.manualUnits,
+          date: new Date().toLocaleString()
+        });
+
+        adminLog = adminLog.slice(0, 50);
+
+        renderSelectedItem();
+        renderResults();
+        renderLog();
+        setStatus("Manual units reset in Google Sheets.", "good");
+      } catch (error) {
+        console.error(error);
+        setStatus(error.message, "bad");
+      }
+
+      isSaving = false;
+      setButtonsDisabled(false);
     }
 
     function renderSelectedItem() {
@@ -777,15 +890,15 @@
           </div>
         </div>
 
-       <div class="unit-buttons">
-  <button class="add-unit" onclick="adjustUnits(1000000)">+1M Units</button>
-  <button class="add-unit" onclick="adjustUnits(100000)">+100K Units</button>
-  <button class="add-unit" onclick="adjustUnits(10000)">+10K Units</button>
+        <div class="unit-buttons">
+          <button class="add-unit" onclick="adjustUnits(1000000)">+1M Units</button>
+          <button class="add-unit" onclick="adjustUnits(100000)">+100K Units</button>
+          <button class="add-unit" onclick="adjustUnits(10000)">+10K Units</button>
 
-  <button class="remove-unit" onclick="adjustUnits(-1000000)">-1M Units</button>
-  <button class="remove-unit" onclick="adjustUnits(-100000)">-100K Units</button>
-  <button class="remove-unit" onclick="adjustUnits(-10000)">-10K Units</button>
-</div>
+          <button class="remove-unit" onclick="adjustUnits(-1000000)">-1M Units</button>
+          <button class="remove-unit" onclick="adjustUnits(-100000)">-100K Units</button>
+          <button class="remove-unit" onclick="adjustUnits(-10000)">-10K Units</button>
+        </div>
 
         <button class="admin-reset-button" onclick="resetManualUnits()">Reset Manual Units</button>
       `;
@@ -796,14 +909,12 @@
 
       if (!logBox) return;
 
-      const log = getAdminLog();
-
-      if (log.length === 0) {
-        logBox.innerHTML = `<p>No manual changes yet.</p>`;
+      if (adminLog.length === 0) {
+        logBox.innerHTML = `<p>No manual changes in this session yet.</p>`;
         return;
       }
 
-      logBox.innerHTML = log.map(row => {
+      logBox.innerHTML = adminLog.map(row => {
         const changeText =
           row.change === "RESET"
             ? "RESET"
@@ -815,18 +926,10 @@
             ${escapeHTML(row.type)} units —
             ${escapeHTML(row.title)} by ${escapeHTML(row.artist)}
             <br>
-            <span>${escapeHTML(row.date)} · Manual total: ${escapeHTML(shortNumber(row.newManualTotal))}</span>
+            <span>${escapeHTML(row.date)} · Manual total: ${escapeHTML(shortNumber(row.manualUnits))}</span>
           </div>
         `;
       }).join("");
-    }
-
-    function renderExport() {
-      const exportBox = document.getElementById("adminExport");
-
-      if (!exportBox) return;
-
-      exportBox.value = JSON.stringify(getManualUnitsData(), null, 2);
     }
 
     function initAdmin() {
@@ -855,7 +958,6 @@
       });
 
       renderLog();
-      renderExport();
     }
 
     initAdmin();
