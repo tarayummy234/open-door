@@ -7,6 +7,314 @@
   <title>Certifications | Open Door Charts</title>
 
   <link rel="stylesheet" href="style.css" />
+
+  <style>
+    .certifications-page {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .certifications-header {
+      background: #181824;
+      border-radius: 18px;
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+
+    .certifications-header h2 {
+      margin-top: 0;
+    }
+
+    .certifications-header p {
+      color: #bbb;
+    }
+
+    .certification-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .certification-tab {
+      background: #101018;
+      color: white;
+      border: 1px solid #33334a;
+      border-radius: 999px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .certification-tab:hover {
+      background: #242433;
+    }
+
+    .certification-tab.active {
+      background: #ff2d95;
+      border-color: #ff2d95;
+    }
+
+    .certification-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .certification-stats div {
+      background: #181824;
+      border-radius: 16px;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .certification-stats strong {
+      display: block;
+      color: #ff2d95;
+      font-size: 28px;
+    }
+
+    .certification-stats span {
+      color: #bbb;
+      font-size: 13px;
+    }
+
+    .certification-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .certification-card {
+      display: grid;
+      grid-template-columns: 64px 96px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+      background: linear-gradient(135deg, #181824, #101018);
+      border: 1px solid #2d2d3f;
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .certification-rank {
+      background: #0c0c12;
+      border: 1px solid #2a2a3a;
+      border-radius: 16px;
+      color: #ff2d95;
+      font-size: 24px;
+      font-weight: 900;
+      text-align: center;
+      padding: 16px 0;
+    }
+
+    .certification-cover {
+      width: 96px;
+      height: 96px;
+      border-radius: 16px;
+      object-fit: cover;
+      background: #2a2a38;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .certification-main {
+      min-width: 0;
+    }
+
+    .certification-title-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .certification-main h3 {
+      margin: 0 0 6px;
+      font-size: 24px;
+      line-height: 1.1;
+    }
+
+    .certification-main a {
+      color: #bfc0cc;
+      text-decoration: none;
+    }
+
+    .certification-main a:hover {
+      color: #ff2d95;
+      text-decoration: underline;
+    }
+
+    .certification-badge {
+      position: relative;
+      overflow: hidden;
+      border-radius: 999px;
+      padding: 12px 18px;
+      min-width: 135px;
+      text-align: center;
+      font-weight: 900;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+        0 8px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .certification-badge::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(
+          115deg,
+          transparent 0%,
+          rgba(255, 255, 255, 0.12) 22%,
+          rgba(255, 255, 255, 0.7) 42%,
+          rgba(255, 255, 255, 0.1) 56%,
+          transparent 78%
+        );
+      transform: translateX(-35%);
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .certification-badge.ruby {
+      color: #fff5f7;
+      background:
+        radial-gradient(circle at 25% 20%, #ffccd5 0%, transparent 24%),
+        linear-gradient(135deg, #ff1744 0%, #c0002b 35%, #650014 70%, #ff456b 100%);
+      border: 1px solid #ff7890;
+      text-shadow: 0 1px 8px rgba(255, 0, 55, 0.9);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        inset 0 -1px 0 rgba(70, 0, 20, 0.8),
+        0 0 22px rgba(255, 23, 68, 0.45),
+        0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .certification-badge.diamond {
+      color: #06131f;
+      background:
+        radial-gradient(circle at 25% 20%, #ffffff 0%, transparent 24%),
+        linear-gradient(135deg, #effdff 0%, #85eaff 30%, #3b8dff 68%, #d8fbff 100%);
+      border: 1px solid #a8f4ff;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.85),
+        inset 0 -1px 0 rgba(0, 55, 110, 0.45),
+        0 0 22px rgba(120, 230, 255, 0.5),
+        0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .certification-badge.platinum {
+      color: #101010;
+      background:
+        linear-gradient(135deg, #ffffff 0%, #c5c5c5 25%, #f6f6f6 48%, #858585 72%, #eeeeee 100%);
+      border: 1px solid #eeeeee;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.75);
+    }
+
+    .certification-badge.gold {
+      color: #1d1300;
+      background:
+        linear-gradient(135deg, #fff5a8 0%, #ffd700 25%, #b8860b 55%, #ffea70 78%, #8c6500 100%);
+      border: 1px solid #ffe36a;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+    }
+
+    .certification-badge.bronze {
+      color: #fff4e6;
+      background:
+        linear-gradient(135deg, #f2b074 0%, #cd7f32 30%, #704214 60%, #e29a55 82%, #5b2f12 100%);
+      border: 1px solid #e7a05f;
+      text-shadow: 0 1px 5px rgba(80, 35, 0, 0.8);
+    }
+
+    .certification-unit-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .certification-unit-strip div {
+      background: #0c0c12;
+      border: 1px solid #29293a;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .certification-unit-strip strong {
+      display: block;
+      color: white;
+      font-size: 22px;
+      line-height: 1.1;
+    }
+
+    .certification-unit-strip span {
+      display: block;
+      color: #a9a9b5;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .certification-empty,
+    .loading-message {
+      background: #181824;
+      color: #bbb;
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    @media (max-width: 850px) {
+      .certification-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .certification-card {
+        grid-template-columns: 54px 78px minmax(0, 1fr);
+      }
+
+      .certification-cover {
+        width: 78px;
+        height: 78px;
+      }
+
+      .certification-title-row {
+        grid-template-columns: 1fr;
+      }
+
+      .certification-unit-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 600px) {
+      .certification-card {
+        grid-template-columns: 48px 64px minmax(0, 1fr);
+        gap: 12px;
+        padding: 14px;
+      }
+
+      .certification-cover {
+        width: 64px;
+        height: 64px;
+      }
+
+      .certification-rank {
+        font-size: 18px;
+        padding: 10px 0;
+      }
+
+      .certification-main h3 {
+        font-size: 18px;
+      }
+
+      .certification-unit-strip {
+        grid-column: 1 / -1;
+      }
+    }
+  </style>
 </head>
 
 <body data-page="certifications">
@@ -32,7 +340,7 @@
   <main class="certifications-page">
     <section class="certifications-header">
       <h2>Certifications</h2>
-      <p>Certifications are based on calculated chart units plus manual units added from the admin page.</p>
+      <p>Song certifications use raw calculated units plus manual units, then apply a 75% reduction. Albums use their full final units.</p>
 
       <div class="certification-tabs">
         <button class="certification-tab active" data-type="song">Songs</button>
@@ -52,61 +360,60 @@
 
   <script>
     const ADMIN_STORAGE_KEY = "openDoorManualUnits";
-
     const SONG_FINAL_UNIT_MULTIPLIER = 0.25;
 
     const CERTIFICATION_LEVELS = [
-  { label: "10x Ruby", threshold: 1000000000, tier: "ruby" },
-  { label: "9x Ruby", threshold: 900000000, tier: "ruby" },
-  { label: "8x Ruby", threshold: 800000000, tier: "ruby" },
-  { label: "7x Ruby", threshold: 700000000, tier: "ruby" },
-  { label: "6x Ruby", threshold: 600000000, tier: "ruby" },
-  { label: "5x Ruby", threshold: 500000000, tier: "ruby" },
-  { label: "4x Ruby", threshold: 400000000, tier: "ruby" },
-  { label: "3x Ruby", threshold: 300000000, tier: "ruby" },
-  { label: "2x Ruby", threshold: 200000000, tier: "ruby" },
-  { label: "1x Ruby", threshold: 100000000, tier: "ruby" },
+      { label: "10x Ruby", threshold: 1000000000, tier: "ruby" },
+      { label: "9x Ruby", threshold: 900000000, tier: "ruby" },
+      { label: "8x Ruby", threshold: 800000000, tier: "ruby" },
+      { label: "7x Ruby", threshold: 700000000, tier: "ruby" },
+      { label: "6x Ruby", threshold: 600000000, tier: "ruby" },
+      { label: "5x Ruby", threshold: 500000000, tier: "ruby" },
+      { label: "4x Ruby", threshold: 400000000, tier: "ruby" },
+      { label: "3x Ruby", threshold: 300000000, tier: "ruby" },
+      { label: "2x Ruby", threshold: 200000000, tier: "ruby" },
+      { label: "1x Ruby", threshold: 100000000, tier: "ruby" },
 
-  { label: "9x Diamond", threshold: 90000000, tier: "diamond" },
-  { label: "8x Diamond", threshold: 80000000, tier: "diamond" },
-  { label: "7x Diamond", threshold: 70000000, tier: "diamond" },
-  { label: "6x Diamond", threshold: 60000000, tier: "diamond" },
-  { label: "5x Diamond", threshold: 50000000, tier: "diamond" },
-  { label: "4x Diamond", threshold: 40000000, tier: "diamond" },
-  { label: "3x Diamond", threshold: 30000000, tier: "diamond" },
-  { label: "2x Diamond", threshold: 20000000, tier: "diamond" },
-  { label: "1x Diamond", threshold: 10000000, tier: "diamond" },
+      { label: "9x Diamond", threshold: 90000000, tier: "diamond" },
+      { label: "8x Diamond", threshold: 80000000, tier: "diamond" },
+      { label: "7x Diamond", threshold: 70000000, tier: "diamond" },
+      { label: "6x Diamond", threshold: 60000000, tier: "diamond" },
+      { label: "5x Diamond", threshold: 50000000, tier: "diamond" },
+      { label: "4x Diamond", threshold: 40000000, tier: "diamond" },
+      { label: "3x Diamond", threshold: 30000000, tier: "diamond" },
+      { label: "2x Diamond", threshold: 20000000, tier: "diamond" },
+      { label: "1x Diamond", threshold: 10000000, tier: "diamond" },
 
-  { label: "9x Platinum", threshold: 9000000, tier: "platinum" },
-  { label: "8x Platinum", threshold: 8000000, tier: "platinum" },
-  { label: "7x Platinum", threshold: 7000000, tier: "platinum" },
-  { label: "6x Platinum", threshold: 6000000, tier: "platinum" },
-  { label: "5x Platinum", threshold: 5000000, tier: "platinum" },
-  { label: "4x Platinum", threshold: 4000000, tier: "platinum" },
-  { label: "3x Platinum", threshold: 3000000, tier: "platinum" },
-  { label: "2x Platinum", threshold: 2000000, tier: "platinum" },
-  { label: "1x Platinum", threshold: 1000000, tier: "platinum" },
+      { label: "9x Platinum", threshold: 9000000, tier: "platinum" },
+      { label: "8x Platinum", threshold: 8000000, tier: "platinum" },
+      { label: "7x Platinum", threshold: 7000000, tier: "platinum" },
+      { label: "6x Platinum", threshold: 6000000, tier: "platinum" },
+      { label: "5x Platinum", threshold: 5000000, tier: "platinum" },
+      { label: "4x Platinum", threshold: 4000000, tier: "platinum" },
+      { label: "3x Platinum", threshold: 3000000, tier: "platinum" },
+      { label: "2x Platinum", threshold: 2000000, tier: "platinum" },
+      { label: "1x Platinum", threshold: 1000000, tier: "platinum" },
 
-  { label: "9x Gold", threshold: 900000, tier: "gold" },
-  { label: "8x Gold", threshold: 800000, tier: "gold" },
-  { label: "7x Gold", threshold: 700000, tier: "gold" },
-  { label: "6x Gold", threshold: 600000, tier: "gold" },
-  { label: "5x Gold", threshold: 500000, tier: "gold" },
-  { label: "4x Gold", threshold: 400000, tier: "gold" },
-  { label: "3x Gold", threshold: 300000, tier: "gold" },
-  { label: "2x Gold", threshold: 200000, tier: "gold" },
-  { label: "1x Gold", threshold: 100000, tier: "gold" },
+      { label: "9x Gold", threshold: 900000, tier: "gold" },
+      { label: "8x Gold", threshold: 800000, tier: "gold" },
+      { label: "7x Gold", threshold: 700000, tier: "gold" },
+      { label: "6x Gold", threshold: 600000, tier: "gold" },
+      { label: "5x Gold", threshold: 500000, tier: "gold" },
+      { label: "4x Gold", threshold: 400000, tier: "gold" },
+      { label: "3x Gold", threshold: 300000, tier: "gold" },
+      { label: "2x Gold", threshold: 200000, tier: "gold" },
+      { label: "1x Gold", threshold: 100000, tier: "gold" },
 
-  { label: "9x Bronze", threshold: 90000, tier: "bronze" },
-  { label: "8x Bronze", threshold: 80000, tier: "bronze" },
-  { label: "7x Bronze", threshold: 70000, tier: "bronze" },
-  { label: "6x Bronze", threshold: 60000, tier: "bronze" },
-  { label: "5x Bronze", threshold: 50000, tier: "bronze" },
-  { label: "4x Bronze", threshold: 40000, tier: "bronze" },
-  { label: "3x Bronze", threshold: 30000, tier: "bronze" },
-  { label: "2x Bronze", threshold: 20000, tier: "bronze" },
-  { label: "1x Bronze", threshold: 10000, tier: "bronze" }
-];
+      { label: "9x Bronze", threshold: 90000, tier: "bronze" },
+      { label: "8x Bronze", threshold: 80000, tier: "bronze" },
+      { label: "7x Bronze", threshold: 70000, tier: "bronze" },
+      { label: "6x Bronze", threshold: 60000, tier: "bronze" },
+      { label: "5x Bronze", threshold: 50000, tier: "bronze" },
+      { label: "4x Bronze", threshold: 40000, tier: "bronze" },
+      { label: "3x Bronze", threshold: 30000, tier: "bronze" },
+      { label: "2x Bronze", threshold: 20000, tier: "bronze" },
+      { label: "1x Bronze", threshold: 10000, tier: "bronze" }
+    ];
 
     let certificationRows = [];
     let activeCertificationType = "song";
@@ -224,26 +531,22 @@
       return data[key] || 0;
     }
 
-    function getReducedFinalUnits(item) {
-  const rawFinalUnits = item.baseUnits + item.manualUnits;
+    function getFinalUnits(item) {
+      const rawFinalUnits = item.baseUnits + item.manualUnits;
 
-  if (item.type === "song") {
-    return Math.round(rawFinalUnits * SONG_FINAL_UNIT_MULTIPLIER);
-  }
+      if (item.type === "song") {
+        return Math.round(rawFinalUnits * SONG_FINAL_UNIT_MULTIPLIER);
+      }
 
-  return Math.round(rawFinalUnits);
-}
+      return Math.round(rawFinalUnits);
+    }
 
     function getCertification(units) {
       return CERTIFICATION_LEVELS.find(level => units >= level.threshold) || null;
     }
 
     async function loadCSV(url, chartType) {
-      const finalUrl = url.includes("?")
-        ? `${url}&cache=${Date.now()}`
-        : `${url}?cache=${Date.now()}`;
-
-      const response = await fetch(finalUrl);
+      const response = await fetch(url);
       const text = await response.text();
 
       const parsed = Papa.parse(text, {
@@ -282,56 +585,49 @@
           );
         });
     }
-function combineSongUnits(streamingRows, salesRows) {
-  const map = new Map();
 
-  function ensureSong(row) {
-    const key = makeItemKey("song", row.title, row.artist);
+    function combineSongUnits(streamingRows, salesRows) {
+      const map = new Map();
 
-    if (!map.has(key)) {
-      map.set(key, {
-        type: "song",
-        title: row.title,
-        artist: row.artist,
-        cover: row.cover,
-        streamingPeakNumber: 0,
-        salesTotal: 0,
-        baseUnits: 0
+      function ensureSong(row) {
+        const key = makeItemKey("song", row.title, row.artist);
+
+        if (!map.has(key)) {
+          map.set(key, {
+            type: "song",
+            title: row.title,
+            artist: row.artist,
+            cover: row.cover,
+            streamingTotal: 0,
+            salesTotal: 0,
+            baseUnits: 0
+          });
+        }
+
+        const item = map.get(key);
+
+        if (!item.cover && row.cover) {
+          item.cover = row.cover;
+        }
+
+        return item;
+      }
+
+      streamingRows.forEach(row => {
+        const item = ensureSong(row);
+        item.streamingTotal += row.metricNumber || 0;
+      });
+
+      salesRows.forEach(row => {
+        const item = ensureSong(row);
+        item.salesTotal += row.metricNumber || 0;
+      });
+
+      return Array.from(map.values()).map(item => {
+        item.baseUnits = Math.round(item.salesTotal + item.streamingTotal / 144.9);
+        return item;
       });
     }
-
-    const item = map.get(key);
-
-    if (!item.cover && row.cover) {
-      item.cover = row.cover;
-    }
-
-    return item;
-  }
-
-  streamingRows.forEach(row => {
-    const item = ensureSong(row);
-
-    // Use the highest streaming number instead of adding every week.
-    // This prevents inflated totals when Column J already contains large/cumulative numbers.
-    item.streamingPeakNumber = Math.max(item.streamingPeakNumber, row.metricNumber || 0);
-  });
-
-  salesRows.forEach(row => {
-    const item = ensureSong(row);
-
-    // Sales can still be added weekly because sales numbers are usually smaller.
-    item.salesTotal += row.metricNumber || 0;
-  });
-
-  return Array.from(map.values()).map(item => {
-    const streamingUnits = item.streamingPeakNumber / STREAMS_PER_SONG_UNIT;
-
-    item.baseUnits = Math.round(item.salesTotal + streamingUnits);
-
-    return item;
-  });
-}
 
     function combineAlbumUnits(albumRows) {
       const map = new Map();
@@ -365,35 +661,32 @@ function combineSongUnits(streamingRows, salesRows) {
     }
 
     async function loadCertificationItems() {
-     const manualUnits = getManualUnits(item);
-const rawFinalUnits = item.baseUnits + manualUnits;
-const finalUnits = getReducedFinalUnits({
-  ...item,
-  manualUnits
-});
-const certification = getCertification(finalUnits);
+      const streamingRows = await loadCSV(SHEETS.streaming, "streaming").catch(() => []);
+      const salesRows = await loadCSV(SHEETS.sales, "sales").catch(() => []);
+      const albumRows = await loadCSV(SHEETS.albums, "albums").catch(() => []);
+
       const songs = combineSongUnits(streamingRows, salesRows);
       const albums = combineAlbumUnits(albumRows);
 
       certificationRows = [...songs, ...albums].map(item => {
-  const manualUnits = getManualUnits(item);
-  const rawFinalUnits = item.baseUnits + manualUnits;
+        const manualUnits = getManualUnits(item);
+        const rawFinalUnits = item.baseUnits + manualUnits;
+        const finalUnits = getFinalUnits({
+          ...item,
+          manualUnits
+        });
 
-  const finalUnits = getReducedFinalUnits({
-    ...item,
-    manualUnits
-  });
+        const certification = getCertification(finalUnits);
 
-  const certification = getCertification(finalUnits);
-
-  return {
-    ...item,
-    manualUnits,
-    rawFinalUnits,
-    finalUnits,
-    certification
-  };
-});
+        return {
+          ...item,
+          manualUnits,
+          rawFinalUnits,
+          finalUnits,
+          certification
+        };
+      });
+    }
 
     function getCertifiedItems(type) {
       return certificationRows
@@ -480,12 +773,12 @@ const certification = getCertification(finalUnits);
               <div class="certification-unit-strip">
                 <div>
                   <strong>${escapeHTML(shortNumber(item.finalUnits))}</strong>
-                  <span>Final Units</span>
+                  <span>${item.type === "song" ? "Final Units After 75% Reduction" : "Final Units"}</span>
                 </div>
 
                 <div>
-                  <strong>${escapeHTML(shortNumber(item.baseUnits))}</strong>
-                  <span>Calculated Units</span>
+                  <strong>${escapeHTML(shortNumber(item.rawFinalUnits))}</strong>
+                  <span>Raw Total</span>
                 </div>
 
                 <div>
