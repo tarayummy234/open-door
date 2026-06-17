@@ -309,6 +309,7 @@
 
   <script>
     const ADMIN_STORAGE_KEY = "openDoorManualUnits";
+    const STREAMS_PER_SONG_UNIT = 60;
     const ADMIN_LOG_KEY = "openDoorManualUnitsLog";
 
     let adminRows = [];
@@ -550,7 +551,7 @@
       });
 
       return Array.from(map.values()).map(item => {
-        item.baseUnits = Math.round(item.salesTotal + item.streamingTotal / 144.9);
+        item.baseUnits = Math.round(item.salesTotal + item.streamingTotal / STREAMS_PER_SONG_UNIT);
         return item;
       });
     }
