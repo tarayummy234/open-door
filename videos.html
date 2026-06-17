@@ -3,43 +3,45 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Music Videos Chart | Open Door</title>
+
+  <title>Music Videos Chart | Sweet 16 Charts</title>
+
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body data-chart="videos">
   <header class="site-header">
-    <h1>Open Door Charts</h1>
+    <h1>Sweet 16 Charts</h1>
     <p>Music Videos Chart</p>
   </header>
 
   <nav class="nav">
-  <a href="index.html">Home</a>
-  <a href="songs.html">Songs</a>
-  <a href="albums.html">Albums</a>
-  <a href="videos.html">Music Videos</a>
-  <a href="streaming.html">SW Music</a>
-  <a href="sales.html">Sales</a>
-  <a href="radio.html">Global Airplay</a>
-  <a href="artists.html">Artists</a>
-  <a href="number-ones.html">All #1s</a>
-</nav>
+    <a href="index.html">Home</a>
+    <a href="songs.html">Songs</a>
+    <a href="albums.html">Albums</a>
+    <a href="videos.html">Music Videos</a>
+    <a href="streaming.html">Streaming</a>
+    <a href="sales.html">Sales</a>
+    <a href="radio.html">Radio</a>
+    <a href="artists.html">Artists</a>
+    <a href="number-ones.html">All #1s</a>
+    <a href="year-end.html">Year-End</a>
+    <a href="certifications.html">Certifications</a>
+  </nav>
 
-  <main class="chart-page">
-    <div class="chart-top">
-      <div>
-        <h2>Music Videos Chart</h2>
-        <p id="chartCount">Loading chart...</p>
+  <main>
+    <section class="chart-top">
+      <h2>Music Videos Chart</h2>
+
+      <div class="chart-controls">
+        <label for="weekSelect">Week</label>
+        <select id="weekSelect"></select>
+        <span id="chartCount" class="chart-count">Loading chart...</span>
       </div>
+    </section>
 
-      <select id="weekSelect">
-        <option>Loading...</option>
-      </select>
-    </div>
-
-    <div id="chart"></div>
+    <section id="chart" class="chart-list"></section>
   </main>
-
-  <audio id="audioPlayer"></audio>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="config.js"></script>
