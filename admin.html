@@ -537,7 +537,7 @@
 
   <script>
     const ADMIN_STORAGE_KEY = "openDoorManualUnits";
-    const STREAMS_PER_SONG_UNIT = 60;
+    const SONG_FINAL_UNIT_MULTIPLIER = 0.25;
     const ADMIN_LOG_KEY = "openDoorManualUnitsLog";
 
     let adminRows = [];
@@ -661,9 +661,15 @@
       localStorage.setItem(ADMIN_LOG_KEY, JSON.stringify(log.slice(0, 50)));
     }
 
-    function getManualUnits(item) {
-      const data = getManualUnitsData();
-      const key = makeItemKey(item.type, item.title, item.artist);
+    function getFinalUnits(item) {
+  const rawFinalUnits = item.baseUnits + getManualUnits(item);
+
+  if (item.type === "song") {
+    return Math.round(rawFinalUnits * SONG_FINAL_UNIT_MULTIPLIER);
+  }
+
+  return Math.round(rawFinalUnits);
+}
 
       return data[key] || 0;
     }
