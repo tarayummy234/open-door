@@ -53,26 +53,28 @@
   <script>
     const ADMIN_STORAGE_KEY = "openDoorManualUnits";
 
-    const CERTIFICATION_LEVELS = [
-      { label: "10x Ruby", threshold: 180000000, tier: "ruby" },
-      { label: "9x Ruby", threshold: 165000000, tier: "ruby" },
-      { label: "8x Ruby", threshold: 150000000, tier: "ruby" },
-      { label: "7x Ruby", threshold: 135000000, tier: "ruby" },
-      { label: "6x Ruby", threshold: 120000000, tier: "ruby" },
-      { label: "5x Ruby", threshold: 105000000, tier: "ruby" },
-      { label: "4x Ruby", threshold: 90000000, tier: "ruby" },
-      { label: "3x Ruby", threshold: 85000000, tier: "ruby" },
-      { label: "2x Ruby", threshold: 70000000, tier: "ruby" },
-      { label: "1x Ruby", threshold: 55000000, tier: "ruby" },
+    const STREAMS_PER_SONG_UNIT = 60;
 
-      { label: "9x Diamond", threshold: 50000000, tier: "diamond" },
-      { label: "8x Diamond", threshold: 45000000, tier: "diamond" },
-      { label: "7x Diamond", threshold: 40000000, tier: "diamond" },
-      { label: "6x Diamond", threshold: 35000000, tier: "diamond" },
-      { label: "5x Diamond", threshold: 30000000, tier: "diamond" },
-      { label: "4x Diamond", threshold: 25000000, tier: "diamond" },
-      { label: "3x Diamond", threshold: 20000000, tier: "diamond" },
-      { label: "2x Diamond", threshold: 15000000, tier: "diamond" },
+    const CERTIFICATION_LEVELS = [
+      { label: "10x Ruby", threshold: 550000000, tier: "ruby" },
+      { label: "9x Ruby", threshold: 500000000, tier: "ruby" },
+      { label: "8x Ruby", threshold: 4500000000, tier: "ruby" },
+      { label: "7x Ruby", threshold: 4000000000, tier: "ruby" },
+      { label: "6x Ruby", threshold: 3500000000, tier: "ruby" },
+      { label: "5x Ruby", threshold: 3000000000, tier: "ruby" },
+      { label: "4x Ruby", threshold: 250000000, tier: "ruby" },
+      { label: "3x Ruby", threshold: 200000000, tier: "ruby" },
+      { label: "2x Ruby", threshold: 150000000, tier: "ruby" },
+      { label: "1x Ruby", threshold: 100000000, tier: "ruby" },
+
+      { label: "9x Diamond", threshold: 90000000, tier: "diamond" },
+      { label: "8x Diamond", threshold: 80000000, tier: "diamond" },
+      { label: "7x Diamond", threshold: 70000000, tier: "diamond" },
+      { label: "6x Diamond", threshold: 60000000, tier: "diamond" },
+      { label: "5x Diamond", threshold: 50000000, tier: "diamond" },
+      { label: "4x Diamond", threshold: 40000000, tier: "diamond" },
+      { label: "3x Diamond", threshold: 30000000, tier: "diamond" },
+      { label: "2x Diamond", threshold: 20000000, tier: "diamond" },
       { label: "1x Diamond", threshold: 10000000, tier: "diamond" },
 
       { label: "9x Platinum", threshold: 9000000, tier: "platinum" },
@@ -309,7 +311,7 @@
       });
 
       return Array.from(map.values()).map(item => {
-        item.baseUnits = Math.round(item.salesTotal + item.streamingTotal / 144.9);
+        item.baseUnits = Math.round(item.salesTotal + item.streamingTotal / STREAMS_PER_SONG_UNIT);
         return item;
       });
     }
