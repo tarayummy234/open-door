@@ -2,21 +2,6 @@ window.SWEET16_SITE_DATA = {
   homeNews: {
     visible: true,
     eyebrow: "This Week on Sweet 16",
-    headline: "Welcome to Sweet 16 Charts",
-    description: "Customize this homepage news banner from admin.html, then copy the generated code into site-data.js.",
-    banner: "",
-    cover: "",
-    link: "songs.html",
-    buttonText: "View Songs Chart",
-    accent: "#ffffff",
-    textColor: "#ffffff"
-  }
-};
-
-window.SWEET16_SITE_DATA = {
-  homeNews: {
-    visible: true,
-    eyebrow: "This Week on Sweet 16",
     headline: "Olivia Domination",
     description: "Olivia Rodrigo's you seem pretty sad for a girl so in love becomes the biggest album debut of 2026 so far. The artist also achieves her 6th #1 debut and becomes the first artist in history to achieve it.",
     banner: "https://www.billboard.com/wp-content/uploads/2026/06/olivia-rodrigo-nick-walker-billboard-1800.jpg?w=942&h=628&crop=1",
