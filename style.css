@@ -1425,3 +1425,7 @@ textarea:focus {
     grid-template-columns: 1fr;
   }
 }
+
+.nav {
+  display: none;
+}
