@@ -517,12 +517,18 @@ function getChartRun(title, artistRaw, chartType = getChartType()) {
       return item.chartType === chartType && makeKey(item.title, item.artistRaw) === itemKey;
     })
     .sort((a, b) => {
+      // Oldest first, so the history starts with debut and ends with most recent.
       return getWeekIndex(b) - getWeekIndex(a);
     });
 
   if (run.length === 0) {
     return `
-      <div class="run-empty">No chart history found.</div>
+      <div class="history-stats">
+        <div>
+          <strong>—</strong>
+          <span>No history</span>
+        </div>
+      </div>
     `;
   }
 
@@ -532,7 +538,7 @@ function getChartRun(title, artistRaw, chartType = getChartType()) {
   const latest = run[run.length - 1];
 
   return `
-    <div class="run-stats">
+    <div class="history-stats">
       <div>
         <strong>#${escapeHTML(peak)}</strong>
         <span>Peak</span>
@@ -544,22 +550,19 @@ function getChartRun(title, artistRaw, chartType = getChartType()) {
       </div>
 
       <div>
-        <strong>${escapeHTML(debut.week)}</strong>
-        <span>Debut week</span>
+        <strong>#${escapeHTML(debut.position)}</strong>
+        <span>Debut</span>
       </div>
 
       <div>
         <strong>#${escapeHTML(latest.position)}</strong>
-        <span>Latest position</span>
+        <span>Most recent</span>
       </div>
     </div>
 
-    <div class="run-history">
+    <div class="history-run">
       ${run.map(item => `
-        <div class="run-week">
-          <span>${escapeHTML(item.week)}</span>
-          <strong>#${escapeHTML(item.position)}</strong>
-        </div>
+        <span>${escapeHTML(item.week)} · #${escapeHTML(item.position)}</span>
       `).join("")}
     </div>
   `;
@@ -593,6 +596,7 @@ function renderChart(week) {
 
   if (!chart) return;
 
+  chart.classList.add("chart-list");
   chart.innerHTML = "";
 
   if (chartCount) {
@@ -606,38 +610,41 @@ function renderChart(week) {
     const movementClass = getMovementClass(movement);
 
     chart.innerHTML += `
-      <article class="compact-chart-item">
-        <div class="compact-rank">#${escapeHTML(item.position)}</div>
+      <article class="compact-chart-row">
+        <div class="position">#${escapeHTML(item.position)}</div>
 
-        <div class="compact-cover-wrap ${item.audio ? "has-audio" : ""}" ${item.audio ? `data-audio="${escapeHTML(item.audio)}"` : ""}>
+        <div class="cover-wrap ${item.audio ? "has-preview" : ""}" ${item.audio ? `data-audio="${escapeHTML(item.audio)}"` : ""}>
           ${item.cover ? `
-            <img class="compact-cover" src="${escapeHTML(item.cover)}" alt="${escapeHTML(item.title)} cover">
+            <img class="cover" src="${escapeHTML(item.cover)}" alt="${escapeHTML(item.title)} cover">
           ` : `
-            <div class="compact-cover placeholder-cover"></div>
+            <div class="cover"></div>
           `}
 
           ${item.audio ? `
-            <button class="play-button image-play-button" data-audio="${escapeHTML(item.audio)}" aria-label="Play preview">
+            <button class="preview-button play-button" data-audio="${escapeHTML(item.audio)}" aria-label="Play preview">
               ▶
             </button>
           ` : ""}
         </div>
 
-        <div class="compact-main">
+        <div class="compact-song-info">
           <h3>${escapeHTML(item.title)}</h3>
           <p>${renderArtistLinks(item)}</p>
-
-          <div class="compact-meta">
-            ${metric ? `<span>${escapeHTML(metric)}</span>` : ""}
-            <span class="movement ${movementClass}">${escapeHTML(movement)}</span>
-          </div>
         </div>
 
-        <button class="compact-expand-button expand-button" data-run="run-${id}" aria-label="Show chart history">
+        <div class="compact-metric">
+          ${metric ? escapeHTML(metric) : ""}
+        </div>
+
+        <div class="movement ${movementClass}">
+          ${escapeHTML(movement)}
+        </div>
+
+        <button class="expand-button" data-run="run-${id}" aria-label="Show chart history">
           +
         </button>
 
-        <div class="compact-chart-run chart-run" id="run-${id}">
+        <div class="chart-history-panel" id="run-${id}">
           ${getChartRun(item.title, item.artistRaw, chartType)}
         </div>
       </article>
@@ -680,7 +687,7 @@ function activateButtons() {
     });
   });
 
-  document.querySelectorAll(".compact-cover-wrap.has-audio").forEach(cover => {
+  document.querySelectorAll(".cover-wrap.has-preview").forEach(cover => {
     cover.addEventListener("click", event => {
       event.preventDefault();
       event.stopPropagation();
