@@ -661,48 +661,84 @@ function activateButtons() {
     audioPlayer = document.createElement("audio");
     audioPlayer.id = "audioPlayer";
     audioPlayer.className = "audio-player";
-    audioPlayer.controls = true;
+    audioPlayer.preload = "none";
     document.body.appendChild(audioPlayer);
   }
 
-  function playPreview(audioUrl) {
+  audioPlayer.controls = false;
+  audioPlayer.removeAttribute("controls");
+  audioPlayer.style.display = "none";
+
+  function resetButtons() {
+    document.querySelectorAll(".play-button").forEach(button => {
+      button.textContent = "▶";
+      button.classList.remove("is-playing");
+    });
+  }
+
+  audioPlayer.onpause = resetButtons;
+  audioPlayer.onended = resetButtons;
+
+  function playPreview(audioUrl, clickedButton = null) {
     if (!audioUrl) return;
 
-    if (audioPlayer.src === audioUrl && !audioPlayer.paused) {
+    const absolute = new URL(audioUrl, location.href).href;
+    const alreadyPlaying = audioPlayer.src === absolute && !audioPlayer.paused;
+
+    if (alreadyPlaying) {
       audioPlayer.pause();
+      resetButtons();
       return;
     }
 
     audioPlayer.src = audioUrl;
-    audioPlayer.play().catch(error => {
+    audioPlayer.play().then(() => {
+      resetButtons();
+      if (clickedButton) {
+        clickedButton.textContent = "❚❚";
+        clickedButton.classList.add("is-playing");
+      }
+    }).catch(error => {
       console.error("Preview could not play:", error);
+      resetButtons();
     });
   }
 
   document.querySelectorAll(".play-button").forEach(button => {
+    if (button.dataset.previewBound === "true") return;
+    button.dataset.previewBound = "true";
+
     button.addEventListener("click", event => {
       event.preventDefault();
       event.stopPropagation();
-      playPreview(button.dataset.audio);
+      playPreview(button.dataset.audio, button);
     });
   });
 
   document.querySelectorAll(".cover-wrap.has-preview").forEach(cover => {
+    if (cover.dataset.previewBound === "true") return;
+    cover.dataset.previewBound = "true";
+
     cover.addEventListener("click", event => {
+      if (event.target.closest("a")) return;
       event.preventDefault();
       event.stopPropagation();
-      playPreview(cover.dataset.audio);
+
+      const button = cover.querySelector(".play-button");
+      playPreview(cover.dataset.audio, button);
     });
   });
 
   document.querySelectorAll(".expand-button").forEach(button => {
+    if (button.dataset.expandBound === "true") return;
+    button.dataset.expandBound = "true";
+
     button.addEventListener("click", event => {
       event.preventDefault();
       event.stopPropagation();
 
       const runId = button.dataset.run;
       const runBox = document.getElementById(runId);
-
       if (!runBox) return;
 
       runBox.classList.toggle("open");
