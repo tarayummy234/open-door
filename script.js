@@ -1305,3 +1305,686 @@ document.addEventListener("DOMContentLoaded", () => {
     initAdminPage();
   }
 });
+
+/* =========================================================
+   SWEET 16 FIX PATCH — previews, streaming, #1s, admin pages
+   Paste at the VERY BOTTOM of script.js
+========================================================= */
+
+const SWEET16_CHART_PAGES = ["songs", "albums", "streaming", "sales", "radio", "videos"];
+
+const SWEET16_PAGE_LABELS = {
+  home: "Home",
+  songs: "Songs Chart",
+  albums: "Albums Chart",
+  streaming: "Streaming Chart",
+  sales: "Sales Chart",
+  radio: "Radio Chart",
+  videos: "Music Videos Chart",
+  artists: "Artist Pages",
+  "number-ones": "All #1s",
+  "year-end": "Year-End",
+  certifications: "Certifications",
+  designer: "Designer",
+  admin: "Admin"
+};
+
+const SWEET16_PAGE_URLS = {
+  home: "index.html",
+  songs: "songs.html",
+  albums: "albums.html",
+  streaming: "streaming.html",
+  sales: "sales.html",
+  radio: "radio.html",
+  videos: "videos.html",
+  artists: "artists.html",
+  "number-ones": "number-ones.html",
+  "year-end": "year-end.html",
+  certifications: "certifications.html",
+  designer: "designer.html",
+  admin: "admin.html"
+};
+
+function sweet16PageStatusDefaults() {
+  const output = {};
+  Object.keys(SWEET16_PAGE_LABELS).forEach(key => {
+    output[key] = {
+      enabled: true,
+      messageType: "coming-soon",
+      customMessage: ""
+    };
+  });
+  return output;
+}
+
+function getSiteSettings() {
+  let saved = {};
+  try {
+    saved = JSON.parse(localStorage.getItem("sweet16SiteSettings") || "{}");
+  } catch (error) {
+    saved = {};
+  }
+
+  const defaults = {
+    ...(typeof DEFAULT_SITE_SETTINGS !== "undefined" ? DEFAULT_SITE_SETTINGS : {}),
+    pageStatus: sweet16PageStatusDefaults()
+  };
+
+  return {
+    ...defaults,
+    ...(window.SWEET16_SETTINGS || {}),
+    ...saved,
+    pageStatus: {
+      ...sweet16PageStatusDefaults(),
+      ...((window.SWEET16_SETTINGS && window.SWEET16_SETTINGS.pageStatus) || {}),
+      ...(saved.pageStatus || {})
+    }
+  };
+}
+
+function getCurrentSweet16PageKey() {
+  if (document.body.dataset.chart) return document.body.dataset.chart;
+  if (document.body.dataset.page) return document.body.dataset.page;
+
+  const file = location.pathname.split("/").pop() || "index.html";
+  const match = Object.entries(SWEET16_PAGE_URLS).find(([, url]) => url === file);
+  return match ? match[0] : "home";
+}
+
+function getDisabledMessage(status) {
+  if (!status) return "Coming Soon";
+  if (status.messageType === "maintenance") return "Under Maintenance";
+  if (status.messageType === "other") return status.customMessage || "This page is temporarily unavailable.";
+  return "Coming Soon";
+}
+
+function renderDisabledPageIfNeeded() {
+  const key = getCurrentSweet16PageKey();
+  if (key === "admin") return false;
+
+  const settings = getSiteSettings();
+  const status = settings.pageStatus && settings.pageStatus[key];
+
+  if (!status || status.enabled !== false) return false;
+
+  const main = document.querySelector("main");
+  if (!main) return true;
+
+  main.innerHTML = `
+    <section class="disabled-page-card">
+      <span class="disabled-page-kicker">${escapeHTML(SWEET16_PAGE_LABELS[key] || "Sweet 16")}</span>
+      <h2>${escapeHTML(getDisabledMessage(status))}</h2>
+      <p>This Sweet 16 page is currently not available.</p>
+      <a href="index.html">Back to Home</a>
+    </section>
+  `;
+
+  return true;
+}
+
+/* ---------- stronger metric parsing ---------- */
+
+function sweet16MetricCellToNumber(value) {
+  const text = clean(value);
+  if (!text || /^https?:\/\//i.test(text)) return 0;
+
+  const upper = text.toUpperCase().replace(/,/g, "");
+  const match = upper.match(/[-+]?\d*\.?\d+/);
+  if (!match) return 0;
+
+  let number = Number(match[0]);
+  if (Number.isNaN(number)) return 0;
+
+  if (upper.includes("B")) number *= 1000000000;
+  else if (upper.includes("M")) number *= 1000000;
+  else if (upper.includes("K")) number *= 1000;
+
+  return number;
+}
+
+function getMetricRaw(row, chartType) {
+  // Streaming, Sales, Radio: column J = index 9.
+  // If J is empty, fall back to column D.
+  if (chartType === "streaming" || chartType === "sales" || chartType === "radio") {
+    return clean(row[9]) || clean(row[3]);
+  }
+
+  return clean(row[3]);
+}
+
+function getMetricNumber(row, chartType) {
+  let number = sweet16MetricCellToNumber(getMetricRaw(row, chartType));
+
+  // Streaming must show column J divided by 17.
+  // Example: 99M / 17 = 5.8M streams.
+  if (chartType === "streaming" && number) {
+    number = number / 17;
+  }
+
+  return number;
+}
+
+/* ---------- preview audio restore ---------- */
+
+function isPlayableAudioURL(value) {
+  const url = clean(value);
+  if (!/^https?:\/\//i.test(url)) return false;
+
+  const lower = url.toLowerCase();
+
+  if (lower.match(/\.(jpg|jpeg|png|gif|webp)(\?|$)/)) return false;
+  if (lower.includes("spotify.com/track")) return false;
+  if (lower.includes("music.apple.com/us/album")) return false;
+  if (lower.includes("music.apple.com/us/song")) return false;
+
+  return (
+    lower.includes("audio-ssl.itunes.apple.com") ||
+    lower.includes("audio.itunes.apple.com") ||
+    lower.includes(".m4a") ||
+    lower.includes(".mp3") ||
+    lower.includes(".aac") ||
+    lower.includes(".wav")
+  );
+}
+
+function findPreviewAudio(row) {
+  // Prefer your preview columns first:
+  // K = 10, L = 11, M = 12, N = 13
+  const preferred = [13, 10, 11, 12];
+
+  for (const index of preferred) {
+    if (isPlayableAudioURL(row[index])) return clean(row[index]);
+  }
+
+  // Backup: scan whole row.
+  for (const cell of row) {
+    if (isPlayableAudioURL(cell)) return clean(cell);
+  }
+
+  return "";
+}
+
+function resetPreviewButtons() {
+  document.querySelectorAll(".play-button").forEach(button => {
+    button.textContent = "▶";
+    button.classList.remove("is-playing");
+  });
+}
+
+function activateButtons() {
+  let audioPlayer = document.getElementById("audioPlayer");
+
+  if (!audioPlayer) {
+    audioPlayer = document.createElement("audio");
+    audioPlayer.id = "audioPlayer";
+    audioPlayer.className = "audio-player";
+    document.body.appendChild(audioPlayer);
+  }
+
+  // Hide the ugly browser audio bar completely.
+  audioPlayer.controls = false;
+  audioPlayer.removeAttribute("controls");
+  audioPlayer.style.display = "none";
+
+  audioPlayer.onpause = resetPreviewButtons;
+  audioPlayer.onended = resetPreviewButtons;
+
+  function playPreview(audioUrl, clickedButton = null) {
+    if (!audioUrl) return;
+
+    const absoluteAudio = new URL(audioUrl, location.href).href;
+    const alreadyPlaying = audioPlayer.src === absoluteAudio && !audioPlayer.paused;
+
+    if (alreadyPlaying) {
+      audioPlayer.pause();
+      resetPreviewButtons();
+      return;
+    }
+
+    audioPlayer.src = audioUrl;
+    audioPlayer.play().then(() => {
+      resetPreviewButtons();
+      if (clickedButton) {
+        clickedButton.textContent = "❚❚";
+        clickedButton.classList.add("is-playing");
+      }
+    }).catch(error => {
+      console.error("Preview could not play:", error);
+      resetPreviewButtons();
+    });
+  }
+
+  document.querySelectorAll(".play-button").forEach(button => {
+    if (button.dataset.previewBound === "true") return;
+    button.dataset.previewBound = "true";
+
+    button.addEventListener("click", event => {
+      event.preventDefault();
+      event.stopPropagation();
+      playPreview(button.dataset.audio, button);
+    });
+  });
+
+  document.querySelectorAll(".cover-wrap.has-preview").forEach(cover => {
+    if (cover.dataset.previewBound === "true") return;
+    cover.dataset.previewBound = "true";
+
+    cover.addEventListener("click", event => {
+      if (event.target.closest("a")) return;
+      event.preventDefault();
+      event.stopPropagation();
+
+      const button = cover.querySelector(".play-button");
+      playPreview(cover.dataset.audio, button);
+    });
+  });
+
+  document.querySelectorAll(".expand-button").forEach(button => {
+    if (button.dataset.expandBound === "true") return;
+    button.dataset.expandBound = "true";
+
+    button.addEventListener("click", event => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const runId = button.dataset.run;
+      const runBox = document.getElementById(runId);
+      if (!runBox) return;
+
+      runBox.classList.toggle("open");
+      button.textContent = runBox.classList.contains("open") ? "−" : "+";
+    });
+  });
+}
+
+/* ---------- homepage latest #1 previews ---------- */
+
+function sweet16ChartHref(chartType) {
+  return SWEET16_PAGE_URLS[chartType] || `${chartType}.html`;
+}
+
+function renderHomePreviewCard(item, chartType, week) {
+  const metric = formatMetric(item);
+  const label = SHORT_CHART_LABELS[chartType] || chartType;
+
+  return `
+    <article class="home-preview-card">
+      <a class="home-preview-link" href="${sweet16ChartHref(chartType)}">
+        <div class="cover-wrap ${item.audio ? "has-preview" : ""}" ${item.audio ? `data-audio="${escapeHTML(item.audio)}"` : ""}>
+          ${
+            item.cover
+              ? `<img class="cover" src="${escapeHTML(item.cover)}" alt="${escapeHTML(item.title)} cover">`
+              : `<div class="cover"></div>`
+          }
+          ${
+            item.audio
+              ? `<button class="preview-button play-button" data-audio="${escapeHTML(item.audio)}" aria-label="Play preview">▶</button>`
+              : ""
+          }
+        </div>
+        <div class="home-preview-info">
+          <span>${escapeHTML(label)} · ${escapeHTML(week)}</span>
+          <h3>#1 ${escapeHTML(item.title)}</h3>
+          <p>${escapeHTML(item.artistRaw)}</p>
+          ${metric ? `<strong>${escapeHTML(metric)}</strong>` : ""}
+        </div>
+      </a>
+    </article>
+  `;
+}
+
+async function initHomeChartPreviews() {
+  const grid = document.getElementById("homeChartPreviews");
+  if (!grid || typeof SHEETS === "undefined") return;
+
+  grid.innerHTML = `<p class="loading-message">Loading latest #1 chart previews...</p>`;
+
+  const results = await Promise.all(
+    SWEET16_CHART_PAGES.map(async chartType => {
+      try {
+        const rows = await loadCSV(SHEETS[chartType], chartType);
+        const weeks = getValidWeeks(rows);
+        const latestWeek = weeks[0];
+
+        if (!latestWeek) return "";
+
+        const currentRows = rows
+          .filter(item => item.week === latestWeek)
+          .sort((a, b) => a.position - b.position);
+
+        const leader = currentRows.find(item => item.position === 1) || currentRows[0];
+        if (!leader) return "";
+
+        return renderHomePreviewCard(leader, chartType, latestWeek);
+      } catch (error) {
+        console.error(`Could not load homepage preview for ${chartType}`, error);
+        return "";
+      }
+    })
+  );
+
+  const html = results.filter(Boolean).join("");
+
+  grid.innerHTML = html || `
+    <div class="panel">
+      <h3>No latest #1s found.</h3>
+      <p>Check your Google Sheets links in config.js.</p>
+    </div>
+  `;
+
+  activateButtons();
+}
+
+/* ---------- All #1s page ---------- */
+
+function buildNumberOneEntries(chartType) {
+  const rows = allRows.filter(item => item.chartType === chartType && item.position === 1);
+  const map = new Map();
+
+  rows.forEach(item => {
+    const key = makeKey(item.title, item.artistRaw);
+
+    if (!map.has(key)) {
+      map.set(key, {
+        chartType,
+        title: item.title,
+        artistRaw: item.artistRaw,
+        artistCredits: item.artistCredits,
+        cover: item.cover,
+        audio: item.audio,
+        rows: []
+      });
+    }
+
+    const entry = map.get(key);
+    entry.rows.push(item);
+
+    if (!entry.cover && item.cover) entry.cover = item.cover;
+    if (!entry.audio && item.audio) entry.audio = item.audio;
+  });
+
+  return Array.from(map.values()).map(entry => {
+    const oldestFirst = [...entry.rows].sort((a, b) => getWeekIndex(b) - getWeekIndex(a));
+    const newestFirst = [...entry.rows].sort((a, b) => getWeekIndex(a) - getWeekIndex(b));
+
+    return {
+      ...entry,
+      weeksAtOne: entry.rows.length,
+      firstWeekAtOne: oldestFirst[0] ? oldestFirst[0].week : "—",
+      latestWeekAtOne: newestFirst[0] ? newestFirst[0].week : "—",
+      totalMetric: entry.rows.reduce((sum, row) => sum + (row.metricNumber || 0), 0)
+    };
+  }).sort((a, b) => {
+    if (b.weeksAtOne !== a.weeksAtOne) return b.weeksAtOne - a.weeksAtOne;
+    return b.totalMetric - a.totalMetric;
+  });
+}
+
+function renderNumberOneEntry(entry, index, chartType) {
+  const id = makeId(entry.title, entry.artistRaw);
+  const metricLabel = METRIC_LABELS[chartType] || "points";
+
+  return `
+    <article class="compact-chart-row">
+      <div class="position">#${index + 1}</div>
+
+      <div class="cover-wrap ${entry.audio ? "has-preview" : ""}" ${entry.audio ? `data-audio="${escapeHTML(entry.audio)}"` : ""}>
+        ${
+          entry.cover
+            ? `<img class="cover" src="${escapeHTML(entry.cover)}" alt="${escapeHTML(entry.title)} cover">`
+            : `<div class="cover"></div>`
+        }
+        ${
+          entry.audio
+            ? `<button class="preview-button play-button" data-audio="${escapeHTML(entry.audio)}" aria-label="Play preview">▶</button>`
+            : ""
+        }
+      </div>
+
+      <div class="compact-song-info">
+        <h3>${escapeHTML(entry.title)}</h3>
+        <p>${renderArtistLinks(entry)}</p>
+      </div>
+
+      <div class="compact-metric">
+        ${escapeHTML(entry.weeksAtOne)} weeks at #1
+      </div>
+
+      <div class="movement same">
+        ${entry.totalMetric ? `${escapeHTML(shortNumber(entry.totalMetric))} ${escapeHTML(metricLabel)}` : "—"}
+      </div>
+
+      <button class="expand-button" data-run="number-one-run-${id}" aria-label="Show #1 history">+</button>
+
+      <div class="chart-history-panel" id="number-one-run-${id}">
+        <div class="history-stats">
+          <div>
+            <strong>${escapeHTML(entry.weeksAtOne)}</strong>
+            <span>Weeks at #1</span>
+          </div>
+          <div>
+            <strong>${escapeHTML(entry.firstWeekAtOne)}</strong>
+            <span>First #1 week</span>
+          </div>
+          <div>
+            <strong>${escapeHTML(entry.latestWeekAtOne)}</strong>
+            <span>Latest #1 week</span>
+          </div>
+        </div>
+
+        <div class="history-run">
+          ${entry.rows
+            .sort((a, b) => getWeekIndex(b) - getWeekIndex(a))
+            .map(row => `<span>${escapeHTML(row.week)} · #1</span>`)
+            .join("")}
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+async function initNumberOnesPage() {
+  const tabs = document.getElementById("numberOnesTabs");
+  const content = document.getElementById("numberOnesContent");
+
+  if (!tabs || !content || typeof SHEETS === "undefined") return;
+
+  content.innerHTML = `<p class="loading-message">Loading all #1s...</p>`;
+
+  const results = await Promise.all(
+    SWEET16_CHART_PAGES.map(([chartType]) => chartType)
+  ).catch(() => []);
+
+  const loaded = await Promise.all(
+    SWEET16_CHART_PAGES.map(chartType => {
+      return loadCSV(SHEETS[chartType], chartType).catch(error => {
+        console.error(`Could not load ${chartType} #1s`, error);
+        return [];
+      });
+    })
+  );
+
+  allRows = loaded.flat();
+  rebuildWeekLists();
+
+  let activeChart = "songs";
+
+  function renderTabs() {
+    tabs.innerHTML = SWEET16_CHART_PAGES.map(chartType => `
+      <button class="artist-chart-tab ${chartType === activeChart ? "active" : ""}" data-number-one-chart="${escapeHTML(chartType)}">
+        ${escapeHTML(SHORT_CHART_LABELS[chartType] || chartType)}
+      </button>
+    `).join("");
+
+    tabs.querySelectorAll("[data-number-one-chart]").forEach(button => {
+      button.addEventListener("click", () => {
+        activeChart = button.dataset.numberOneChart;
+        renderTabs();
+        renderContent();
+      });
+    });
+  }
+
+  function renderContent() {
+    const entries = buildNumberOneEntries(activeChart);
+
+    content.classList.add("chart-list");
+
+    if (!entries.length) {
+      content.innerHTML = `
+        <div class="panel">
+          <h3>No #1s found.</h3>
+          <p>Check the ${escapeHTML(SHORT_CHART_LABELS[activeChart] || activeChart)} data.</p>
+        </div>
+      `;
+      return;
+    }
+
+    content.innerHTML = entries
+      .map((entry, index) => renderNumberOneEntry(entry, index, activeChart))
+      .join("");
+
+    activateButtons();
+  }
+
+  renderTabs();
+  renderContent();
+}
+
+/* ---------- Admin page controls ---------- */
+
+function renderAdminPageStatusControls(settings) {
+  const form = document.getElementById("customizeForm");
+  if (!form || document.getElementById("pageStatusAdmin")) return;
+
+  const block = document.createElement("section");
+  block.id = "pageStatusAdmin";
+  block.className = "admin-page-status";
+
+  block.innerHTML = `
+    <h2>Page Status Controls</h2>
+    <p>Disable or enable pages and choose what message appears publicly.</p>
+
+    <div class="page-status-grid">
+      ${Object.entries(SWEET16_PAGE_LABELS).filter(([key]) => key !== "admin").map(([key, label]) => {
+        const status = settings.pageStatus[key] || { enabled: true, messageType: "coming-soon", customMessage: "" };
+
+        return `
+          <div class="page-status-row" data-page-status-key="${escapeHTML(key)}">
+            <div>
+              <strong>${escapeHTML(label)}</strong>
+              <small>${escapeHTML(SWEET16_PAGE_URLS[key] || "")}</small>
+            </div>
+
+            <label>
+              <input type="checkbox" class="page-status-enabled" ${status.enabled !== false ? "checked" : ""}>
+              Enabled
+            </label>
+
+            <select class="page-status-message-type">
+              <option value="coming-soon" ${status.messageType === "coming-soon" ? "selected" : ""}>Coming Soon</option>
+              <option value="maintenance" ${status.messageType === "maintenance" ? "selected" : ""}>Under Maintenance</option>
+              <option value="other" ${status.messageType === "other" ? "selected" : ""}>Other</option>
+            </select>
+
+            <input class="page-status-custom-message" type="text" placeholder="Custom message" value="${escapeHTML(status.customMessage || "")}">
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+
+  form.insertAdjacentElement("beforeend", block);
+}
+
+function collectPageStatusSettings() {
+  const pageStatus = sweet16PageStatusDefaults();
+
+  document.querySelectorAll("[data-page-status-key]").forEach(row => {
+    const key = row.dataset.pageStatusKey;
+
+    pageStatus[key] = {
+      enabled: row.querySelector(".page-status-enabled").checked,
+      messageType: row.querySelector(".page-status-message-type").value,
+      customMessage: row.querySelector(".page-status-custom-message").value
+    };
+  });
+
+  return pageStatus;
+}
+
+function initAdminPage() {
+  const form = document.getElementById("customizeForm");
+  if (!form) return;
+
+  const settings = getSiteSettings();
+
+  document.getElementById("siteTitle").value = settings.siteTitle || "";
+  document.getElementById("siteTagline").value = settings.siteTagline || "";
+  document.getElementById("newsTitle").value = settings.newsTitle || "";
+  document.getElementById("newsBody").value = settings.newsBody || "";
+  document.getElementById("newsImage").value = settings.newsImage || "";
+  document.getElementById("accentColor").value = settings.accentColor || "#ffffff";
+
+  renderAdminPageStatusControls(settings);
+
+  const exportBox = document.getElementById("settingsExport");
+
+  function collectSettings() {
+    return {
+      siteTitle: document.getElementById("siteTitle").value,
+      siteTagline: document.getElementById("siteTagline").value,
+      newsTitle: document.getElementById("newsTitle").value,
+      newsBody: document.getElementById("newsBody").value,
+      newsImage: document.getElementById("newsImage").value,
+      accentColor: document.getElementById("accentColor").value,
+      pageStatus: collectPageStatusSettings()
+    };
+  }
+
+  function updateExportBox(nextSettings) {
+    if (!exportBox) return;
+    exportBox.value = `window.SWEET16_SETTINGS = ${JSON.stringify(nextSettings, null, 2)};`;
+  }
+
+  updateExportBox(settings);
+
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+
+    const nextSettings = collectSettings();
+    localStorage.setItem("sweet16SiteSettings", JSON.stringify(nextSettings));
+
+    updateExportBox(nextSettings);
+    applySiteSettings();
+
+    const status = document.getElementById("adminStatus");
+    if (status) {
+      status.textContent = "Saved in this browser. Copy the export code into site-settings.js to make it public.";
+    }
+  });
+
+  const resetButton = document.getElementById("resetCustomize");
+
+  if (resetButton) {
+    resetButton.addEventListener("click", () => {
+      localStorage.removeItem("sweet16SiteSettings");
+      location.reload();
+    });
+  }
+}
+
+/* ---------- extra page startup ---------- */
+
+document.addEventListener("DOMContentLoaded", () => {
+  const disabled = renderDisabledPageIfNeeded();
+  if (disabled) return;
+
+  if (document.body.dataset.page === "home") {
+    initHomeChartPreviews();
+  }
+
+  if (document.body.dataset.page === "number-ones") {
+    initNumberOnesPage();
+  }
+});
