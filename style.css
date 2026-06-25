@@ -1927,3 +1927,336 @@ textarea:focus {
     grid-template-columns: repeat(2, 1fr) !important;
   }
 }
+
+/* =========================================================
+   SWEET 16 FIX PATCH CSS
+   Paste at the VERY BOTTOM of style.css
+========================================================= */
+
+.audio-player,
+audio#audioPlayer {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
+
+.preview-button.is-playing {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+.home-preview-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.home-preview-card {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 16px !important;
+  padding: 14px !important;
+}
+
+.home-preview-link {
+  display: grid !important;
+  grid-template-columns: 68px minmax(0, 1fr) !important;
+  gap: 12px !important;
+  text-decoration: none !important;
+  align-items: center !important;
+}
+
+.home-preview-card .cover-wrap,
+.home-preview-card .cover {
+  width: 68px !important;
+  height: 68px !important;
+}
+
+.home-preview-info {
+  min-width: 0 !important;
+}
+
+.home-preview-info span {
+  color: var(--muted) !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+}
+
+.home-preview-info h3 {
+  margin: 3px 0 !important;
+  font-size: 17px !important;
+  line-height: 1.1 !important;
+}
+
+.home-preview-info p {
+  margin: 0 !important;
+  color: var(--muted) !important;
+  font-size: 13px !important;
+}
+
+.home-preview-info strong {
+  display: block !important;
+  margin-top: 5px !important;
+  color: var(--accent) !important;
+  font-size: 12px !important;
+}
+
+/* Disabled pages */
+
+.disabled-page-card {
+  width: min(760px, calc(100% - 28px)) !important;
+  margin: 50px auto !important;
+  padding: 34px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  background: rgba(255,255,255,0.04) !important;
+  text-align: center !important;
+}
+
+.disabled-page-kicker {
+  color: var(--accent) !important;
+  font-weight: 950 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.12em !important;
+  font-size: 12px !important;
+}
+
+.disabled-page-card h2 {
+  font-size: clamp(34px, 7vw, 70px) !important;
+  margin: 10px 0 !important;
+  letter-spacing: -0.06em !important;
+  text-transform: uppercase !important;
+}
+
+.disabled-page-card p {
+  color: var(--muted) !important;
+}
+
+.disabled-page-card a {
+  display: inline-block !important;
+  margin-top: 12px !important;
+  padding: 12px 18px !important;
+  border-radius: 999px !important;
+  background: var(--accent) !important;
+  color: #000 !important;
+  font-weight: 950 !important;
+  text-decoration: none !important;
+}
+
+/* Admin page status */
+
+.admin-page-status {
+  margin-top: 26px !important;
+  padding-top: 22px !important;
+  border-top: 1px solid var(--border) !important;
+}
+
+.page-status-grid {
+  display: grid !important;
+  gap: 12px !important;
+  margin-top: 14px !important;
+}
+
+.page-status-row {
+  display: grid !important;
+  grid-template-columns: minmax(160px, 1fr) 120px 190px minmax(180px, 1fr) !important;
+  gap: 12px !important;
+  align-items: center !important;
+  padding: 12px !important;
+  background: rgba(255,255,255,0.035) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 14px !important;
+}
+
+.page-status-row strong {
+  display: block !important;
+}
+
+.page-status-row small {
+  display: block !important;
+  color: var(--muted) !important;
+  margin-top: 2px !important;
+}
+
+.page-status-row label {
+  display: flex !important;
+  gap: 8px !important;
+  align-items: center !important;
+  font-weight: 900 !important;
+}
+
+/* Year-End compact repair */
+
+.year-end-list {
+  display: grid !important;
+  gap: 8px !important;
+}
+
+.year-end-card,
+.year-end-card-clean {
+  display: grid !important;
+  grid-template-columns: 58px 58px minmax(0, 1fr) !important;
+  gap: 12px !important;
+  align-items: center !important;
+  padding: 10px 12px !important;
+  border-radius: 12px !important;
+  background: rgba(255,255,255,0.035) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+
+.year-end-rank {
+  font-size: 24px !important;
+  color: var(--accent) !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  text-align: center !important;
+}
+
+.year-end-cover {
+  width: 58px !important;
+  height: 58px !important;
+  border-radius: 8px !important;
+  object-fit: cover !important;
+}
+
+.year-end-main {
+  min-width: 0 !important;
+}
+
+.year-end-title-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+
+.year-end-main h3 {
+  margin: 0 0 3px !important;
+  font-size: 17px !important;
+  line-height: 1.15 !important;
+}
+
+.year-end-artists,
+.year-end-artists a {
+  color: var(--muted) !important;
+  font-size: 13px !important;
+  text-decoration: none !important;
+}
+
+.year-end-total-pill {
+  background: #050505 !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 999px !important;
+  padding: 7px 10px !important;
+  min-width: 120px !important;
+  text-align: right !important;
+}
+
+.year-end-total-pill span {
+  display: none !important;
+}
+
+.year-end-total-pill strong {
+  font-size: 13px !important;
+  color: var(--muted) !important;
+}
+
+.year-end-stat-strip,
+.year-end-dates {
+  display: none !important;
+}
+
+/* Certifications compact repair */
+
+.certification-list {
+  display: grid !important;
+  gap: 8px !important;
+}
+
+.certification-card {
+  display: grid !important;
+  grid-template-columns: 58px 58px minmax(0, 1fr) auto !important;
+  gap: 12px !important;
+  align-items: center !important;
+  padding: 10px 12px !important;
+  border-radius: 12px !important;
+  background: rgba(255,255,255,0.035) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+
+.certification-rank {
+  font-size: 24px !important;
+  color: var(--accent) !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  text-align: center !important;
+}
+
+.certification-cover {
+  width: 58px !important;
+  height: 58px !important;
+  border-radius: 8px !important;
+  object-fit: cover !important;
+}
+
+.certification-main {
+  min-width: 0 !important;
+}
+
+.certification-title-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+
+.certification-main h3 {
+  margin: 0 0 3px !important;
+  font-size: 17px !important;
+  line-height: 1.15 !important;
+}
+
+.certification-main a {
+  color: var(--muted) !important;
+  font-size: 13px !important;
+  text-decoration: none !important;
+}
+
+.certification-badge {
+  min-width: auto !important;
+  padding: 8px 11px !important;
+  font-size: 12px !important;
+}
+
+.certification-unit-strip {
+  display: none !important;
+}
+
+@media (max-width: 760px) {
+  .compact-chart-row,
+  .year-end-card,
+  .certification-card {
+    grid-template-columns: 44px 54px minmax(0, 1fr) 34px !important;
+  }
+
+  .compact-metric,
+  .movement,
+  .year-end-total-pill,
+  .certification-badge {
+    display: none !important;
+  }
+
+  .page-status-row {
+    grid-template-columns: 1fr !important;
+  }
+}
