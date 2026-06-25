@@ -1523,8 +1523,8 @@ function activateButtons() {
 
   // Hide the ugly browser audio bar completely.
   audioPlayer.controls = false;
-  audioPlayer.removeAttribute("controls");
-  audioPlayer.style.display = "none";
+audioPlayer.removeAttribute("controls");
+audioPlayer.style.display = "none";
 
   audioPlayer.onpause = resetPreviewButtons;
   audioPlayer.onended = resetPreviewButtons;
