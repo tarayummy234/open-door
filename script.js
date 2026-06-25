@@ -1639,13 +1639,58 @@ function sweet16ChartHref(chartType) {
   return SWEET16_PAGE_URLS[chartType] || `${chartType}.html`;
 }
 
-function renderHomePreviewCard(item, chartType, week) {
+function getEntryRunStats(item, rows) {
+  const key = makeKey(item.title, item.artistRaw);
+
+  const run = rows
+    .filter(row => makeKey(row.title, row.artistRaw) === key)
+    .sort((a, b) => getWeekIndex(a) - getWeekIndex(b)); // latest first
+
+  return {
+    weeksAtOne: run.filter(row => row.position === 1).length,
+    totalWeeks: run.length,
+    lastWeek: run[0] ? run[0].week : "—"
+  };
+}
+
+function getLatestWeekRows(rows, chartType) {
+  const weeks = getValidWeeks(rows);
+  const latestWeek = weeks[0];
+  if (!latestWeek) return [];
+  return rows
+    .filter(row => row.week === latestWeek)
+    .sort((a, b) => a.position - b.position);
+}
+
+function getSupportMetricsForSong(songItem, chartRowsMap) {
+  const key = makeKey(songItem.title, songItem.artistRaw);
+
+  function matchMetric(chartType) {
+    const rows = chartRowsMap[chartType] || [];
+    const latestRows = getLatestWeekRows(rows, chartType);
+    const found = latestRows.find(row => makeKey(row.title, row.artistRaw) === key);
+    return found ? formatMetric(found) : "—";
+  }
+
+  return {
+    streaming: matchMetric("streaming"),
+    sales: matchMetric("sales"),
+    radio: matchMetric("radio")
+  };
+}
+
+function renderHomePreviewCard(item, chartType, week, stats, supportMetrics = null) {
   const metric = formatMetric(item);
   const label = SHORT_CHART_LABELS[chartType] || chartType;
 
   return `
-    <article class="home-preview-card">
-      <a class="home-preview-link" href="${sweet16ChartHref(chartType)}">
+    <article class="home-preview-card format-${escapeHTML(chartType)}">
+      <div class="home-preview-head">
+        <span class="home-format-pill">${escapeHTML(label)}</span>
+        <span class="home-week-pill">${escapeHTML(week)}</span>
+      </div>
+
+      <div class="home-preview-main">
         <div class="cover-wrap ${item.audio ? "has-preview" : ""}" ${item.audio ? `data-audio="${escapeHTML(item.audio)}"` : ""}>
           ${
             item.cover
@@ -1658,13 +1703,40 @@ function renderHomePreviewCard(item, chartType, week) {
               : ""
           }
         </div>
+
         <div class="home-preview-info">
-          <span>${escapeHTML(label)} · ${escapeHTML(week)}</span>
           <h3>#1 ${escapeHTML(item.title)}</h3>
           <p>${escapeHTML(item.artistRaw)}</p>
           ${metric ? `<strong>${escapeHTML(metric)}</strong>` : ""}
         </div>
-      </a>
+      </div>
+
+      <div class="home-preview-stats">
+        <div>
+          <span>Weeks at #1</span>
+          <strong>${escapeHTML(stats.weeksAtOne)}</strong>
+        </div>
+        <div>
+          <span>Total Weeks</span>
+          <strong>${escapeHTML(stats.totalWeeks)}</strong>
+        </div>
+        <div>
+          <span>Last Week</span>
+          <strong>${escapeHTML(stats.lastWeek)}</strong>
+        </div>
+      </div>
+
+      ${
+        chartType === "songs" && supportMetrics
+          ? `
+            <div class="home-support-metrics">
+              <div><span>Streaming</span><strong>${escapeHTML(supportMetrics.streaming)}</strong></div>
+              <div><span>Sales</span><strong>${escapeHTML(supportMetrics.sales)}</strong></div>
+              <div><span>Radio</span><strong>${escapeHTML(supportMetrics.radio)}</strong></div>
+            </div>
+          `
+          : ""
+      }
     </article>
   `;
 }
