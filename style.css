@@ -2932,3 +2932,66 @@ body[data-page="year-end"] .year-end-list {
     justify-self: start !important;
   }
 }
+/* =========================================================
+   SWEET 16 AUTO PREVIEW BUTTON CSS
+   Paste at the VERY BOTTOM of style.css
+========================================================= */
+
+.audio-player,
+audio#audioPlayer {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
+
+.cover-wrap {
+  position: relative !important;
+  overflow: hidden !important;
+  cursor: pointer !important;
+}
+
+.preview-button,
+.play-button {
+  position: absolute !important;
+  right: 7px !important;
+  bottom: 7px !important;
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255,255,255,0.22) !important;
+  background: rgba(0,0,0,0.82) !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  z-index: 20 !important;
+  opacity: 1 !important;
+  transform: none !important;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35) !important;
+}
+
+.cover-wrap:hover .preview-button,
+.cover-wrap:hover .play-button {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+.preview-button.is-playing,
+.play-button.is-playing {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+.preview-button.is-loading,
+.play-button.is-loading {
+  opacity: 0.7 !important;
+  pointer-events: none !important;
+}
