@@ -2479,3 +2479,456 @@ audio#audioPlayer {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* =========================================================
+   SWEET 16 STYLE PATCH
+   Paste at the VERY BOTTOM of style.css
+========================================================= */
+
+:root {
+  --page-bg: #121212;
+  --page-text: #ffffff;
+  --page-card-bg: #0a0a0a;
+  --page-card-text: #ffffff;
+  --page-accent: #ffffff;
+  --page-heading-font: inherit;
+  --page-body-font: inherit;
+}
+
+html, body {
+  background: var(--page-bg) !important;
+  color: var(--page-text) !important;
+  font-family: var(--page-body-font), sans-serif !important;
+}
+
+h1, h2, h3, h4, h5, h6,
+.site-header,
+.chart-top,
+.home-hero,
+.hero-title {
+  font-family: var(--page-heading-font), sans-serif !important;
+}
+
+/* ---------- separate page background from card background ---------- */
+
+.panel,
+.chart-top,
+.chart,
+.chart-list > *,
+.compact-chart-row,
+.home-news,
+.home-preview-card,
+.artist-summary,
+.artist-panel,
+.artist-card,
+.year-end-card,
+.year-end-card-clean,
+.certification-card,
+#chart > *,
+#numberOnesContent > *,
+#yearEndChart > *,
+#certificationChart > * {
+  background: var(--page-card-bg) !important;
+  color: var(--page-card-text) !important;
+}
+
+.panel *,
+.chart-top *,
+.chart *,
+.chart-list > * *,
+.compact-chart-row *,
+.home-news *,
+.home-preview-card *,
+.artist-summary *,
+.artist-panel *,
+.artist-card *,
+.year-end-card *,
+.year-end-card-clean *,
+.certification-card * {
+  color: inherit;
+}
+
+/* ---------- audio player hidden ---------- */
+
+.audio-player,
+audio#audioPlayer {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
+
+/* ---------- preview buttons ---------- */
+
+.cover-wrap {
+  position: relative !important;
+  cursor: pointer !important;
+  overflow: hidden !important;
+}
+
+.cover-wrap.has-preview .preview-button,
+.cover-wrap.has-preview .play-button {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.preview-button,
+.play-button {
+  position: absolute !important;
+  right: 8px !important;
+  bottom: 8px !important;
+  width: 30px !important;
+  height: 30px !important;
+  border: none !important;
+  border-radius: 999px !important;
+  background: rgba(0,0,0,0.82) !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+  z-index: 5 !important;
+}
+
+.preview-button.is-playing,
+.play-button.is-playing {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* ---------- Latest #1s home section ---------- */
+
+.home-preview-grid,
+#homeChartPreviews {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(255px, 1fr)) !important;
+  gap: 16px !important;
+}
+
+.home-preview-card {
+  border-radius: 18px !important;
+  padding: 16px !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  box-shadow: none !important;
+  min-height: 100% !important;
+}
+
+.home-preview-card.format-songs {
+  background: linear-gradient(180deg, rgba(170,176,180,0.18), var(--page-card-bg)) !important;
+  border-color: rgba(170,176,180,0.55) !important;
+}
+
+.home-preview-card.format-albums {
+  background: linear-gradient(180deg, rgba(155,89,255,0.18), var(--page-card-bg)) !important;
+  border-color: rgba(155,89,255,0.55) !important;
+}
+
+.home-preview-card.format-streaming {
+  background: linear-gradient(180deg, rgba(46,204,113,0.18), var(--page-card-bg)) !important;
+  border-color: rgba(46,204,113,0.55) !important;
+}
+
+.home-preview-card.format-sales {
+  background: linear-gradient(180deg, rgba(241,196,15,0.18), var(--page-card-bg)) !important;
+  border-color: rgba(241,196,15,0.55) !important;
+}
+
+.home-preview-card.format-radio {
+  background: linear-gradient(180deg, rgba(52,152,219,0.18), var(--page-card-bg)) !important;
+  border-color: rgba(52,152,219,0.55) !important;
+}
+
+.home-preview-card.format-videos {
+  background: linear-gradient(180deg, rgba(255,79,163,0.18), var(--page-card-bg)) !important;
+  border-color: rgba(255,79,163,0.55) !important;
+}
+
+.home-preview-head {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-bottom: 12px !important;
+}
+
+.home-format-pill,
+.home-week-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 7px 10px !important;
+  border-radius: 999px !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  background: rgba(0,0,0,0.5) !important;
+}
+
+.home-preview-main {
+  display: grid !important;
+  grid-template-columns: 76px minmax(0, 1fr) !important;
+  gap: 14px !important;
+  align-items: center !important;
+}
+
+.home-preview-card .cover {
+  width: 76px !important;
+  height: 76px !important;
+  object-fit: cover !important;
+  border-radius: 12px !important;
+  display: block !important;
+}
+
+.home-preview-info {
+  min-width: 0 !important;
+}
+
+.home-preview-info h3 {
+  margin: 0 0 4px !important;
+  font-size: 17px !important;
+  line-height: 1.1 !important;
+  color: #fff !important;
+}
+
+.home-preview-info p {
+  margin: 0 !important;
+  font-size: 13px !important;
+  opacity: 0.86 !important;
+}
+
+.home-preview-info strong {
+  display: block !important;
+  margin-top: 7px !important;
+  font-size: 13px !important;
+}
+
+.home-preview-stats,
+.home-support-metrics {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  margin-top: 14px !important;
+}
+
+.home-preview-stats > div,
+.home-support-metrics > div {
+  min-width: 0 !important;
+  background: rgba(0,0,0,0.58) !important;
+  border: 1px solid rgba(255,255,255,0.09) !important;
+  border-radius: 12px !important;
+  padding: 10px !important;
+}
+
+.home-preview-stats span,
+.home-support-metrics span {
+  display: block !important;
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  opacity: 0.72 !important;
+  margin-bottom: 4px !important;
+}
+
+.home-preview-stats strong,
+.home-support-metrics strong {
+  display: block !important;
+  font-size: 13px !important;
+  line-height: 1.25 !important;
+  word-break: break-word !important;
+}
+
+/* ---------- songs/albums/etc card rows keep strong contrast ---------- */
+
+.compact-chart-row,
+#chart > article,
+#chart > div {
+  background: var(--page-card-bg) !important;
+  color: var(--page-card-text) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 14px !important;
+}
+
+.position,
+.compact-metric,
+.movement,
+.chart-history-panel,
+.chart-history-panel * {
+  color: inherit !important;
+}
+
+/* ---------- year-end top repair ---------- */
+
+body[data-page="year-end"] main,
+body[data-page="year-end"] section {
+  color: var(--page-text) !important;
+}
+
+body[data-page="year-end"] select,
+body[data-page="year-end"] button {
+  border-radius: 999px !important;
+}
+
+body[data-page="year-end"] #yearEndChart,
+body[data-page="year-end"] .year-end-list {
+  display: grid !important;
+  gap: 12px !important;
+}
+
+.year-end-card,
+.year-end-card-clean {
+  display: grid !important;
+  grid-template-columns: 54px 64px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 14px !important;
+  padding: 12px 14px !important;
+  border-radius: 16px !important;
+  background: var(--page-card-bg) !important;
+  color: var(--page-card-text) !important;
+  box-shadow: none !important;
+}
+
+.year-end-rank {
+  font-size: 24px !important;
+  font-weight: 900 !important;
+  color: var(--page-accent) !important;
+  text-align: center !important;
+}
+
+.year-end-cover {
+  width: 64px !important;
+  height: 64px !important;
+  object-fit: cover !important;
+  border-radius: 10px !important;
+}
+
+.year-end-main {
+  min-width: 0 !important;
+}
+
+.year-end-main h3 {
+  margin: 0 0 4px !important;
+  font-size: 17px !important;
+  line-height: 1.1 !important;
+}
+
+.year-end-main p,
+.year-end-main a {
+  margin: 0 !important;
+  font-size: 13px !important;
+  opacity: 0.85 !important;
+}
+
+.year-end-total-pill {
+  background: rgba(255,255,255,0.08) !important;
+  border-radius: 999px !important;
+  padding: 10px 14px !important;
+  white-space: nowrap !important;
+  font-weight: 900 !important;
+}
+
+/* ---------- certifications ---------- */
+
+.certification-card {
+  display: grid !important;
+  grid-template-columns: 54px 64px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 14px !important;
+  padding: 12px 14px !important;
+  border-radius: 16px !important;
+  background: var(--page-card-bg) !important;
+  color: var(--page-card-text) !important;
+  box-shadow: none !important;
+}
+
+.certification-cover {
+  width: 64px !important;
+  height: 64px !important;
+  object-fit: cover !important;
+  border-radius: 10px !important;
+}
+
+/* ---------- admin/designer theme panel ---------- */
+
+.admin-theme-panel {
+  margin-top: 28px !important;
+  padding-top: 24px !important;
+  border-top: 1px solid rgba(255,255,255,0.12) !important;
+}
+
+.page-theme-grid {
+  display: grid !important;
+  gap: 14px !important;
+  margin-top: 14px !important;
+}
+
+.page-theme-row {
+  display: grid !important;
+  grid-template-columns: 140px repeat(5, 120px) 1fr 1fr !important;
+  gap: 10px !important;
+  align-items: end !important;
+  padding: 12px !important;
+  border-radius: 14px !important;
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.09) !important;
+}
+
+.page-theme-row label {
+  display: grid !important;
+  gap: 6px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+.page-theme-title {
+  font-size: 14px !important;
+  font-weight: 900 !important;
+}
+
+.page-theme-row input[type="text"] {
+  min-width: 0 !important;
+}
+
+/* ---------- mobile ---------- */
+
+@media (max-width: 920px) {
+  .page-theme-row {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .page-theme-title {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .home-preview-main {
+    grid-template-columns: 68px minmax(0, 1fr) !important;
+  }
+
+  .home-preview-card .cover {
+    width: 68px !important;
+    height: 68px !important;
+  }
+
+  .home-preview-stats,
+  .home-support-metrics {
+    grid-template-columns: 1fr !important;
+  }
+
+  .year-end-card,
+  .year-end-card-clean,
+  .certification-card {
+    grid-template-columns: 44px 56px minmax(0, 1fr) !important;
+  }
+
+  .year-end-total-pill {
+    grid-column: 1 / -1 !important;
+    justify-self: start !important;
+  }
+}
