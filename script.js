@@ -2810,3 +2810,441 @@ document.addEventListener("DOMContentLoaded", () => {
     initAdminPage();
   }
 });
+
+/* =========================================================
+   SWEET 16 AUTO PREVIEW PATCH
+   Apple/iTunes preview lookup + hidden audio player
+   Paste at the VERY BOTTOM of script.js
+========================================================= */
+
+const SWEET16_PREVIEW_CACHE_KEY = "sweet16PreviewCacheV3";
+
+function getPreviewCache() {
+  try {
+    return JSON.parse(localStorage.getItem(SWEET16_PREVIEW_CACHE_KEY) || "{}");
+  } catch (error) {
+    return {};
+  }
+}
+
+function savePreviewCache(cache) {
+  try {
+    localStorage.setItem(SWEET16_PREVIEW_CACHE_KEY, JSON.stringify(cache));
+  } catch (error) {
+    console.warn("Could not save preview cache", error);
+  }
+}
+
+function normalizePreviewText(value) {
+  return clean(value)
+    .toLowerCase()
+    .replace(/\([^)]*\)/g, " ")
+    .replace(/\[[^\]]*\]/g, " ")
+    .replace(/feat\.|ft\.|featuring/g, " ")
+    .replace(/[^a-z0-9áéíóúñü]+/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function makePreviewCacheKey(title, artist) {
+  return `${normalizePreviewText(title)}|${normalizePreviewText(artist)}`;
+}
+
+function isDirectPreviewUrl(value) {
+  const url = clean(value);
+  if (!/^https?:\/\//i.test(url)) return false;
+
+  const lower = url.toLowerCase();
+
+  if (lower.match(/\.(jpg|jpeg|png|gif|webp)(\?|$)/)) return false;
+  if (lower.includes("spotify.com/track")) return false;
+  if (lower.includes("spotify.com/album")) return false;
+  if (lower.includes("music.apple.com")) return false;
+
+  return (
+    lower.includes("audio-ssl.itunes.apple.com") ||
+    lower.includes("audio.itunes.apple.com") ||
+    lower.includes(".m4a") ||
+    lower.includes(".mp3") ||
+    lower.includes(".aac") ||
+    lower.includes(".wav")
+  );
+}
+
+function extractPreviewTitle(row) {
+  if (!row) return "";
+
+  const titleNode =
+    row.querySelector(".home-preview-info h3") ||
+    row.querySelector(".compact-song-info h3") ||
+    row.querySelector(".year-end-main h3") ||
+    row.querySelector(".certification-main h3") ||
+    row.querySelector("h3");
+
+  let title = titleNode ? titleNode.textContent : "";
+
+  title = title
+    .replace(/^#\d+\s*/i, "")
+    .replace(/^#1\s*/i, "")
+    .replace(/^NEW\s*/i, "")
+    .trim();
+
+  return title;
+}
+
+function extractPreviewArtist(row) {
+  if (!row) return "";
+
+  const artistLinks = Array.from(row.querySelectorAll('a[href*="artists.html"]'))
+    .map(link => clean(link.textContent))
+    .filter(Boolean);
+
+  if (artistLinks.length) return artistLinks.join(" & ");
+
+  const artistNode =
+    row.querySelector(".home-preview-info p") ||
+    row.querySelector(".compact-song-info p") ||
+    row.querySelector(".year-end-artists") ||
+    row.querySelector(".certification-artists") ||
+    row.querySelector("p");
+
+  return artistNode ? clean(artistNode.textContent) : "";
+}
+
+function getPreviewRowFromElement(element) {
+  return (
+    element.closest(".home-preview-card") ||
+    element.closest(".compact-chart-row") ||
+    element.closest(".artist-entry") ||
+    element.closest(".artist-card") ||
+    element.closest(".year-end-card") ||
+    element.closest(".year-end-card-clean") ||
+    element.closest(".certification-card") ||
+    element.closest("article") ||
+    element.closest("li") ||
+    element.parentElement
+  );
+}
+
+function scoreITunesResult(result, title, artist) {
+  const targetTitle = normalizePreviewText(title);
+  const targetArtist = normalizePreviewText(artist);
+  const resultTitle = normalizePreviewText(result.trackName || "");
+  const resultArtist = normalizePreviewText(result.artistName || "");
+
+  let score = 0;
+
+  if (resultTitle === targetTitle) score += 100;
+  else if (resultTitle.includes(targetTitle) || targetTitle.includes(resultTitle)) score += 45;
+
+  if (resultArtist === targetArtist) score += 80;
+  else if (resultArtist.includes(targetArtist) || targetArtist.includes(resultArtist)) score += 35;
+
+  if (result.previewUrl) score += 30;
+
+  return score;
+}
+
+async function lookupITunesTrackPreview(title, artist) {
+  const query = `${title} ${artist}`.trim();
+  if (!query) return "";
+
+  const url =
+    "https://itunes.apple.com/search" +
+    `?term=${encodeURIComponent(query)}` +
+    "&media=music" +
+    "&entity=song" +
+    "&limit=15" +
+    "&country=US";
+
+  const response = await fetch(url);
+  if (!response.ok) return "";
+
+  const data = await response.json();
+  const results = Array.isArray(data.results) ? data.results : [];
+
+  const best = results
+    .filter(result => result.previewUrl)
+    .sort((a, b) => scoreITunesResult(b, title, artist) - scoreITunesResult(a, title, artist))[0];
+
+  return best ? best.previewUrl : "";
+}
+
+async function lookupITunesAlbumPreview(title, artist) {
+  const query = `${title} ${artist}`.trim();
+  if (!query) return "";
+
+  const albumSearchUrl =
+    "https://itunes.apple.com/search" +
+    `?term=${encodeURIComponent(query)}` +
+    "&media=music" +
+    "&entity=album" +
+    "&limit=5" +
+    "&country=US";
+
+  const response = await fetch(albumSearchUrl);
+  if (!response.ok) return "";
+
+  const data = await response.json();
+  const albums = Array.isArray(data.results) ? data.results : [];
+  const album = albums[0];
+
+  if (!album || !album.collectionId) return "";
+
+  const lookupUrl =
+    "https://itunes.apple.com/lookup" +
+    `?id=${encodeURIComponent(album.collectionId)}` +
+    "&entity=song" +
+    "&limit=10" +
+    "&country=US";
+
+  const lookupResponse = await fetch(lookupUrl);
+  if (!lookupResponse.ok) return "";
+
+  const lookupData = await lookupResponse.json();
+  const tracks = Array.isArray(lookupData.results) ? lookupData.results : [];
+
+  const firstTrackWithPreview = tracks.find(item => item.wrapperType === "track" && item.previewUrl);
+
+  return firstTrackWithPreview ? firstTrackWithPreview.previewUrl : "";
+}
+
+async function getAutoPreviewUrl(title, artist, preferAlbum = false) {
+  const cacheKey = makePreviewCacheKey(title, artist);
+  const cache = getPreviewCache();
+
+  if (cache[cacheKey]) return cache[cacheKey];
+
+  let preview = "";
+
+  try {
+    preview = preferAlbum
+      ? await lookupITunesAlbumPreview(title, artist)
+      : await lookupITunesTrackPreview(title, artist);
+
+    if (!preview && !preferAlbum) {
+      preview = await lookupITunesAlbumPreview(title, artist);
+    }
+
+    if (!preview && preferAlbum) {
+      preview = await lookupITunesTrackPreview(title, artist);
+    }
+  } catch (error) {
+    console.warn("Preview lookup failed:", title, artist, error);
+  }
+
+  if (preview) {
+    cache[cacheKey] = preview;
+    savePreviewCache(cache);
+  }
+
+  return preview;
+}
+
+function getOrCreateHiddenAudioPlayer() {
+  let audioPlayer = document.getElementById("audioPlayer");
+
+  if (!audioPlayer) {
+    audioPlayer = document.createElement("audio");
+    audioPlayer.id = "audioPlayer";
+    audioPlayer.className = "audio-player";
+    audioPlayer.preload = "none";
+    document.body.appendChild(audioPlayer);
+  }
+
+  audioPlayer.controls = false;
+  audioPlayer.removeAttribute("controls");
+  audioPlayer.style.display = "none";
+
+  return audioPlayer;
+}
+
+function resetSweet16PreviewButtons() {
+  document.querySelectorAll(".play-button").forEach(button => {
+    button.textContent = "▶";
+    button.classList.remove("is-playing");
+    button.classList.remove("is-loading");
+  });
+}
+
+async function playSweet16Preview(button) {
+  const audioPlayer = getOrCreateHiddenAudioPlayer();
+
+  let audioUrl = clean(button.dataset.audio);
+  const title = clean(button.dataset.title);
+  const artist = clean(button.dataset.artist);
+  const preferAlbum = button.dataset.chartType === "albums";
+
+  if (!audioUrl && title) {
+    button.textContent = "…";
+    button.classList.add("is-loading");
+
+    audioUrl = await getAutoPreviewUrl(title, artist, preferAlbum);
+
+    button.classList.remove("is-loading");
+
+    if (audioUrl) {
+      button.dataset.audio = audioUrl;
+
+      const cover = button.closest(".cover-wrap") || button.parentElement;
+      if (cover) {
+        cover.dataset.audio = audioUrl;
+        cover.classList.add("has-preview");
+      }
+    }
+  }
+
+  if (!audioUrl) {
+    button.textContent = "×";
+    setTimeout(() => {
+      button.textContent = "▶";
+    }, 900);
+    return;
+  }
+
+  const absolute = new URL(audioUrl, location.href).href;
+  const alreadyPlaying = audioPlayer.src === absolute && !audioPlayer.paused;
+
+  if (alreadyPlaying) {
+    audioPlayer.pause();
+    resetSweet16PreviewButtons();
+    return;
+  }
+
+  audioPlayer.src = audioUrl;
+
+  audioPlayer.play().then(() => {
+    resetSweet16PreviewButtons();
+    button.textContent = "❚❚";
+    button.classList.add("is-playing");
+  }).catch(error => {
+    console.error("Preview could not play:", error);
+    resetSweet16PreviewButtons();
+  });
+}
+
+function addPreviewButtonToCover(coverTarget) {
+  if (!coverTarget) return;
+
+  const row = getPreviewRowFromElement(coverTarget);
+  const title = extractPreviewTitle(row);
+  const artist = extractPreviewArtist(row);
+  const chartType = document.body.dataset.chart || "";
+
+  if (!title) return;
+
+  coverTarget.classList.add("cover-wrap");
+  coverTarget.style.position = "relative";
+
+  let directAudio = clean(coverTarget.dataset.audio);
+
+  if (!directAudio) {
+    const possibleDirect = Array.from(row ? row.querySelectorAll("[data-audio]") : [])
+      .map(item => clean(item.dataset.audio))
+      .find(isDirectPreviewUrl);
+
+    directAudio = possibleDirect || "";
+  }
+
+  let button = coverTarget.querySelector(".play-button");
+
+  if (!button) {
+    button = document.createElement("button");
+    button.type = "button";
+    button.className = "preview-button play-button";
+    button.textContent = "▶";
+    button.setAttribute("aria-label", "Play preview");
+    coverTarget.appendChild(button);
+  }
+
+  button.dataset.title = title;
+  button.dataset.artist = artist;
+  button.dataset.chartType = chartType;
+
+  if (directAudio) {
+    button.dataset.audio = directAudio;
+    coverTarget.dataset.audio = directAudio;
+    coverTarget.classList.add("has-preview");
+  }
+
+  coverTarget.classList.add("has-preview");
+}
+
+function ensurePreviewButtons() {
+  const coverTargets = new Set();
+
+  document.querySelectorAll(".cover-wrap").forEach(item => coverTargets.add(item));
+
+  document.querySelectorAll("img.cover, .cover, .year-end-cover, .certification-cover").forEach(item => {
+    const target = item.closest(".cover-wrap") || item.parentElement;
+    if (target) coverTargets.add(target);
+  });
+
+  coverTargets.forEach(target => addPreviewButtonToCover(target));
+}
+
+function activateButtons() {
+  const audioPlayer = getOrCreateHiddenAudioPlayer();
+
+  audioPlayer.onpause = resetSweet16PreviewButtons;
+  audioPlayer.onended = resetSweet16PreviewButtons;
+
+  ensurePreviewButtons();
+
+  document.querySelectorAll(".play-button").forEach(button => {
+    if (button.dataset.previewBound === "true") return;
+    button.dataset.previewBound = "true";
+
+    button.addEventListener("click", event => {
+      event.preventDefault();
+      event.stopPropagation();
+      playSweet16Preview(button);
+    });
+  });
+
+  document.querySelectorAll(".cover-wrap").forEach(cover => {
+    if (cover.dataset.coverPreviewBound === "true") return;
+    cover.dataset.coverPreviewBound = "true";
+
+    cover.addEventListener("click", event => {
+      if (event.target.closest("a")) return;
+      if (event.target.closest(".expand-button")) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const button = cover.querySelector(".play-button");
+      if (button) playSweet16Preview(button);
+    });
+  });
+
+  document.querySelectorAll(".expand-button").forEach(button => {
+    if (button.dataset.expandBound === "true") return;
+    button.dataset.expandBound = "true";
+
+    button.addEventListener("click", event => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const runId = button.dataset.run;
+      const runBox = document.getElementById(runId);
+      if (!runBox) return;
+
+      runBox.classList.toggle("open");
+      button.textContent = runBox.classList.contains("open") ? "−" : "+";
+    });
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  activateButtons();
+
+  const observer = new MutationObserver(() => {
+    activateButtons();
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+});
