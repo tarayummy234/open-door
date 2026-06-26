@@ -3195,3 +3195,165 @@ a {
     grid-column: 1 / -1 !important;
   }
 }
+
+/* =========================================================
+   SWEET 16 MOVEMENT + PREVIEW HOVER PATCH
+   Paste at the VERY BOTTOM of style.css
+========================================================= */
+
+/* Movement colors should NEVER follow page theme colors */
+
+.s16-move-badge,
+.movement,
+.chart-movement,
+.compact-movement,
+.position-change,
+.movement-badge {
+  font-weight: 950 !important;
+  border-radius: 999px !important;
+  padding: 7px 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  width: fit-content !important;
+  min-width: 42px !important;
+  text-align: center !important;
+}
+
+/* NEW = light blue */
+.s16-move-new,
+.movement.new,
+.new {
+  background: rgba(100, 210, 255, 0.18) !important;
+  color: #64d2ff !important;
+  border: 1px solid rgba(100, 210, 255, 0.45) !important;
+}
+
+/* Rise = green */
+.s16-move-up,
+.movement.up,
+.up {
+  background: rgba(46, 204, 113, 0.18) !important;
+  color: #2ecc71 !important;
+  border: 1px solid rgba(46, 204, 113, 0.45) !important;
+}
+
+/* Fall = red */
+.s16-move-down,
+.movement.down,
+.down {
+  background: rgba(255, 77, 77, 0.18) !important;
+  color: #ff4d4d !important;
+  border: 1px solid rgba(255, 77, 77, 0.45) !important;
+}
+
+/* Re-entry = purple */
+.s16-move-reentry,
+.movement.reentry,
+.reentry {
+  background: rgba(180, 104, 255, 0.18) !important;
+  color: #b468ff !important;
+  border: 1px solid rgba(180, 104, 255, 0.45) !important;
+}
+
+/* Current / same = gray */
+.s16-move-current,
+.movement.same,
+.same {
+  background: rgba(180, 180, 180, 0.16) !important;
+  color: #b8b8b8 !important;
+  border: 1px solid rgba(180, 180, 180, 0.36) !important;
+}
+
+/* Preview buttons: hidden until hover or playing */
+
+.cover-wrap {
+  position: relative !important;
+  overflow: hidden !important;
+  cursor: pointer !important;
+}
+
+.cover-wrap .preview-button,
+.cover-wrap .play-button {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: scale(0.9) !important;
+  transition: opacity 0.18s ease, transform 0.18s ease, background 0.18s ease, color 0.18s ease !important;
+}
+
+.cover-wrap:hover .preview-button,
+.cover-wrap:hover .play-button,
+.cover-wrap .preview-button.is-playing,
+.cover-wrap .play-button.is-playing,
+.cover-wrap .preview-button.is-loading,
+.cover-wrap .play-button.is-loading {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: scale(1) !important;
+}
+
+.preview-button,
+.play-button {
+  position: absolute !important;
+  right: 7px !important;
+  bottom: 7px !important;
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255,255,255,0.22) !important;
+  background: rgba(0,0,0,0.82) !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  z-index: 20 !important;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35) !important;
+}
+
+.cover-wrap:hover .preview-button,
+.cover-wrap:hover .play-button {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+.preview-button.is-playing,
+.play-button.is-playing {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Page rescue button */
+
+.s16-page-rescue-box {
+  width: min(1250px, calc(100% - 28px)) !important;
+  margin: 24px auto !important;
+  padding: 20px !important;
+  border-radius: 18px !important;
+  background: rgba(255,255,255,0.055) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  color: var(--s16-page-text, #fff) !important;
+}
+
+.s16-page-rescue-box h2 {
+  margin: 0 0 8px !important;
+}
+
+.s16-page-rescue-box p {
+  margin: 0 0 14px !important;
+  opacity: 0.78 !important;
+}
+
+#s16EnableAllPages {
+  border: none !important;
+  border-radius: 999px !important;
+  padding: 12px 18px !important;
+  background: var(--s16-accent, #fff) !important;
+  color: #000 !important;
+  font-weight: 950 !important;
+  cursor: pointer !important;
+}
