@@ -37,12 +37,12 @@ window.SWEET16_SETTINGS = {
       "customMessage": ""
     },
     "videos": {
-      "enabled": false,
+      "enabled": true,
       "messageType": "coming-soon",
       "customMessage": ""
     },
     "artists": {
-      "enabled": false,
+      "enabled": true,
       "messageType": "maintenance",
       "customMessage": ""
     },
@@ -52,17 +52,17 @@ window.SWEET16_SETTINGS = {
       "customMessage": ""
     },
     "year-end": {
-      "enabled": false,
+      "enabled": true,
       "messageType": "maintenance",
       "customMessage": ""
     },
     "certifications": {
-      "enabled": false,
+      "enabled": true,
       "messageType": "coming-soon",
       "customMessage": ""
     },
     "designer": {
-      "enabled": false,
+      "enabled": true,
       "messageType": "other",
       "customMessage": "Only Chart Team Allowed"
     },
@@ -146,11 +146,11 @@ window.SWEET16_SETTINGS = {
       "bodyFont": "Inter Tight"
     },
     "number-ones": {
-      "pageBg": "#121212",
-      "pageText": "#ffffff",
-      "cardBg": "#070707",
+      "pageBg": "#785700",
+      "pageText": "#ffd877",
+      "cardBg": "#444444",
       "cardText": "#ffffff",
-      "accent": "#a77b00",
+      "accent": "#d29d00",
       "headingFont": "Inter Tight Black",
       "bodyFont": "Inter Tight"
     },
