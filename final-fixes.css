@@ -1,1 +1,564 @@
+/* =========================================================
+   SWEET 16 FINAL FIXES CSS
+   Loaded automatically by final-fixes.js
+========================================================= */
 
+:root {
+  --s16-page-bg: #121212;
+  --s16-page-text: #ffffff;
+  --s16-card-bg: #101010;
+  --s16-card-text: #ffffff;
+  --s16-accent: #ffffff;
+  --s16-heading-font: "Arial Black", Arial, sans-serif;
+  --s16-body-font: Arial, sans-serif;
+}
+
+html,
+body {
+  background: var(--s16-page-bg) !important;
+  color: var(--s16-page-text) !important;
+  font-family: var(--s16-body-font) !important;
+}
+
+body,
+p,
+span,
+a,
+button,
+select,
+input,
+textarea,
+label {
+  font-family: var(--s16-body-font) !important;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.site-header h1,
+.chart-top h2,
+.hero-title {
+  font-family: var(--s16-heading-font) !important;
+}
+
+/* Cards must use card color, not page background */
+
+.panel,
+.chart-top,
+.compact-chart-row,
+.home-preview-card,
+.home-news,
+.artist-card,
+.artist-entry,
+.artist-song-card,
+.artist-panel article,
+.artist-summary,
+.year-end-card,
+.year-end-card-clean,
+.certification-card,
+#chart > article,
+#chart > div,
+#numberOnesContent > article,
+#numberOnesContent > div,
+#yearEndChart > article,
+#yearEndChart > div,
+#certificationChart > article,
+#certificationChart > div {
+  background: var(--s16-card-bg) !important;
+  color: var(--s16-card-text) !important;
+  border-color: rgba(255,255,255,.12) !important;
+}
+
+/* Fix invisible artist/certification/year-end rows */
+
+.s16-visible-row,
+.artist-entry,
+.artist-card,
+.artist-song-card,
+.artist-panel article,
+.certification-card,
+.year-end-card,
+.year-end-card-clean,
+#certificationChart article,
+#certificationChart > div,
+#yearEndChart article,
+#yearEndChart > div {
+  display: grid !important;
+  grid-template-columns: 48px 68px minmax(0, 1fr) auto !important;
+  gap: 14px !important;
+  align-items: center !important;
+  min-height: 88px !important;
+  padding: 12px 14px !important;
+  border-radius: 16px !important;
+  overflow: visible !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.s16-visible-row h3,
+.s16-visible-row p,
+.s16-visible-row a,
+.s16-visible-row span,
+.s16-visible-row strong,
+.artist-entry h3,
+.artist-entry p,
+.artist-entry a,
+.artist-entry span,
+.artist-entry strong,
+.artist-card h3,
+.artist-card p,
+.artist-card a,
+.artist-card span,
+.artist-card strong,
+.artist-song-card h3,
+.artist-song-card p,
+.artist-song-card a,
+.artist-song-card span,
+.artist-song-card strong,
+.certification-card h3,
+.certification-card p,
+.certification-card a,
+.certification-card span,
+.certification-card strong,
+.year-end-card h3,
+.year-end-card p,
+.year-end-card a,
+.year-end-card span,
+.year-end-card strong,
+.year-end-card-clean h3,
+.year-end-card-clean p,
+.year-end-card-clean a,
+.year-end-card-clean span,
+.year-end-card-clean strong {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  color: inherit !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-indent: 0 !important;
+  transform: none !important;
+  clip-path: none !important;
+}
+
+.s16-visible-row h3,
+.artist-entry h3,
+.artist-card h3,
+.artist-song-card h3,
+.certification-card h3,
+.year-end-card h3,
+.year-end-card-clean h3 {
+  margin: 0 0 4px !important;
+  font-size: 18px !important;
+  line-height: 1.15 !important;
+  font-weight: 900 !important;
+}
+
+/* Smooth square image frames everywhere */
+
+.cover-wrap,
+.home-preview-card .cover-wrap,
+.home-news .cover-wrap,
+.artist-entry .cover-wrap,
+.artist-card .cover-wrap,
+.artist-song-card .cover-wrap,
+.certification-card .cover-wrap,
+.year-end-card .cover-wrap,
+.year-end-card-clean .cover-wrap {
+  width: 68px !important;
+  height: 68px !important;
+  min-width: 68px !important;
+  min-height: 68px !important;
+  max-width: 68px !important;
+  max-height: 68px !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  position: relative !important;
+  background: rgba(255,255,255,.08) !important;
+  flex: 0 0 auto !important;
+}
+
+.cover,
+.home-preview-card .cover,
+.home-news .cover,
+.artist-entry .cover,
+.artist-card .cover,
+.artist-song-card .cover,
+.certification-card .cover,
+.certification-cover,
+.year-end-card .cover,
+.year-end-card-clean .cover,
+.year-end-cover {
+  width: 68px !important;
+  height: 68px !important;
+  min-width: 68px !important;
+  min-height: 68px !important;
+  max-width: 68px !important;
+  max-height: 68px !important;
+  object-fit: cover !important;
+  display: block !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+/* Chart page covers slightly smaller */
+
+.compact-chart-row .cover-wrap,
+#chart .cover-wrap {
+  width: 58px !important;
+  height: 58px !important;
+  min-width: 58px !important;
+  min-height: 58px !important;
+  max-width: 58px !important;
+  max-height: 58px !important;
+  border-radius: 10px !important;
+}
+
+.compact-chart-row .cover,
+#chart .cover {
+  width: 58px !important;
+  height: 58px !important;
+  min-width: 58px !important;
+  min-height: 58px !important;
+  max-width: 58px !important;
+  max-height: 58px !important;
+  border-radius: 10px !important;
+  object-fit: cover !important;
+}
+
+/* Preview buttons hidden until hover or playing */
+
+.audio-player,
+audio#audioPlayer {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
+
+.preview-button,
+.play-button {
+  position: absolute !important;
+  right: 8px !important;
+  bottom: 8px !important;
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255,255,255,.22) !important;
+  background: rgba(0,0,0,.82) !important;
+  color: #fff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+  z-index: 20 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: scale(.92) !important;
+  transition: opacity .18s ease, transform .18s ease, background .18s ease, color .18s ease !important;
+}
+
+.cover-wrap:hover .preview-button,
+.cover-wrap:hover .play-button,
+.preview-button.is-playing,
+.play-button.is-playing,
+.preview-button.is-loading,
+.play-button.is-loading {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: scale(1) !important;
+}
+
+.cover-wrap:hover .preview-button,
+.cover-wrap:hover .play-button,
+.preview-button.is-playing,
+.play-button.is-playing {
+  background: #fff !important;
+  color: #000 !important;
+}
+
+/* Movement badges: permanent colors */
+
+.s16-move-badge,
+.movement,
+.chart-movement,
+.position-change,
+.movement-badge {
+  border-radius: 999px !important;
+  padding: 7px 10px !important;
+  font-weight: 900 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  min-width: 44px !important;
+}
+
+.s16-move-new {
+  background: rgba(100,210,255,.18) !important;
+  color: #64d2ff !important;
+  border: 1px solid rgba(100,210,255,.45) !important;
+}
+
+.s16-move-up {
+  background: rgba(46,204,113,.18) !important;
+  color: #2ecc71 !important;
+  border: 1px solid rgba(46,204,113,.45) !important;
+}
+
+.s16-move-down {
+  background: rgba(255,77,77,.18) !important;
+  color: #ff4d4d !important;
+  border: 1px solid rgba(255,77,77,.45) !important;
+}
+
+.s16-move-reentry {
+  background: rgba(180,104,255,.18) !important;
+  color: #b468ff !important;
+  border: 1px solid rgba(180,104,255,.45) !important;
+}
+
+.s16-move-current {
+  background: rgba(180,180,180,.15) !important;
+  color: #b8b8b8 !important;
+  border: 1px solid rgba(180,180,180,.35) !important;
+}
+
+/* Home news banner */
+
+.home-news.s16-final-home-news,
+#homeNews {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.25fr) minmax(250px, .75fr) !important;
+  gap: 18px !important;
+  padding: 24px !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  margin: 24px auto !important;
+  min-height: 220px !important;
+}
+
+.home-news-kicker {
+  display: inline-block !important;
+  margin-bottom: 10px !important;
+  color: var(--s16-accent) !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .08em !important;
+  font-size: 12px !important;
+}
+
+.home-news-copy h2 {
+  margin: 0 0 10px !important;
+  font-size: clamp(32px, 5vw, 62px) !important;
+  line-height: .9 !important;
+}
+
+.home-news-copy p {
+  margin: 0 0 16px !important;
+  max-width: 58ch !important;
+  color: rgba(255,255,255,.82) !important;
+}
+
+.home-news-button {
+  display: inline-flex !important;
+  padding: 12px 18px !important;
+  border-radius: 999px !important;
+  background: var(--s16-accent) !important;
+  color: #000 !important;
+  text-decoration: none !important;
+  font-weight: 900 !important;
+}
+
+.home-news-song {
+  display: grid !important;
+  grid-template-columns: 96px minmax(0,1fr) !important;
+  gap: 14px !important;
+  align-items: center !important;
+  align-self: end !important;
+}
+
+.home-news-song .cover-wrap,
+.home-news-song .cover {
+  width: 96px !important;
+  height: 96px !important;
+  min-width: 96px !important;
+  min-height: 96px !important;
+  max-width: 96px !important;
+  max-height: 96px !important;
+}
+
+/* Admin / Designer */
+
+.s16-admin-panel,
+.s16-designer-panel {
+  width: min(1280px, calc(100% - 28px)) !important;
+  margin: 28px auto !important;
+  padding: 22px !important;
+  border-radius: 22px !important;
+  background: var(--s16-card-bg) !important;
+  color: var(--s16-card-text) !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+}
+
+.s16-admin-grid,
+.s16-theme-grid {
+  display: grid !important;
+  gap: 14px !important;
+  margin-top: 14px !important;
+}
+
+.s16-admin-row,
+.s16-theme-row {
+  display: grid !important;
+  gap: 10px !important;
+  padding: 14px !important;
+  border-radius: 16px !important;
+  background: rgba(255,255,255,.04) !important;
+  border: 1px solid rgba(255,255,255,.09) !important;
+}
+
+.s16-admin-row {
+  grid-template-columns: 160px 120px 190px 1fr !important;
+  align-items: center !important;
+}
+
+.s16-theme-row {
+  grid-template-columns: 140px repeat(5, 110px) 160px 160px 1fr 180px !important;
+  align-items: end !important;
+}
+
+.s16-news-grid,
+.s16-site-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  margin-bottom: 18px !important;
+}
+
+.s16-admin-panel input,
+.s16-admin-panel select,
+.s16-admin-panel textarea,
+.s16-designer-panel input,
+.s16-designer-panel select,
+.s16-designer-panel textarea {
+  width: 100% !important;
+  min-width: 0 !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(255,255,255,.18) !important;
+  background: #000 !important;
+  color: #fff !important;
+  padding: 9px !important;
+}
+
+.s16-actions {
+  display: flex !important;
+  gap: 12px !important;
+  margin: 18px 0 !important;
+}
+
+.s16-actions button {
+  border: none !important;
+  border-radius: 999px !important;
+  padding: 12px 18px !important;
+  background: var(--s16-accent) !important;
+  color: #000 !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+}
+
+#s16AdminExport,
+#s16DesignerExport {
+  width: 100% !important;
+  min-height: 260px !important;
+  background: #000 !important;
+  color: #fff !important;
+  border-radius: 14px !important;
+  padding: 14px !important;
+  border: 1px solid rgba(255,255,255,.15) !important;
+  font-family: monospace !important;
+}
+
+.s16-mini-preview {
+  border: 1px solid var(--s16-accent) !important;
+  border-radius: 14px !important;
+  padding: 12px !important;
+  min-height: 80px !important;
+}
+
+.s16-mini-preview span {
+  display: block !important;
+  font-size: 11px !important;
+  opacity: .75 !important;
+  margin-bottom: 6px !important;
+}
+
+.s16-mini-preview strong {
+  display: block !important;
+  font-size: 16px !important;
+}
+
+.s16-closed-page {
+  max-width: 720px !important;
+  margin: 60px auto !important;
+  padding: 28px !important;
+  text-align: center !important;
+  border-radius: 18px !important;
+  background: var(--s16-card-bg) !important;
+  border: 1px solid rgba(255,255,255,.1) !important;
+}
+
+.s16-closed-page a {
+  display: inline-block !important;
+  margin-top: 12px !important;
+  padding: 12px 18px !important;
+  border-radius: 999px !important;
+  background: var(--s16-accent) !important;
+  color: #000 !important;
+  font-weight: 900 !important;
+  text-decoration: none !important;
+}
+
+@media (max-width: 980px) {
+  .s16-admin-row,
+  .s16-theme-row,
+  .s16-news-grid,
+  .s16-site-grid,
+  .home-news.s16-final-home-news,
+  #homeNews {
+    grid-template-columns: 1fr !important;
+  }
+
+  .s16-visible-row,
+  .artist-entry,
+  .artist-card,
+  .artist-song-card,
+  .certification-card,
+  .year-end-card,
+  .year-end-card-clean {
+    grid-template-columns: 42px 58px minmax(0,1fr) !important;
+  }
+
+  .cover-wrap,
+  .cover,
+  .certification-cover,
+  .year-end-cover {
+    width: 58px !important;
+    height: 58px !important;
+    min-width: 58px !important;
+    min-height: 58px !important;
+    max-width: 58px !important;
+    max-height: 58px !important;
+  }
+}
