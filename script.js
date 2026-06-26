@@ -3383,3 +3383,70 @@ document.addEventListener("DOMContentLoaded", () => {
     characterData: true
   });
 });
+
+/* =========================================================
+   SWEET 16 MOVEMENT BUG FIX
+========================================================= */
+
+function s16NormalizeMoveText(value) {
+  return String(value || "").trim().toUpperCase().replace(/\s+/g, " ");
+}
+
+function s16ApplyMovementClasses() {
+  const nodes = document.querySelectorAll(
+    ".movement, .chart-movement, .position-change, .movement-badge, .compact-chart-row .movement"
+  );
+
+  nodes.forEach(el => {
+    const text = s16NormalizeMoveText(el.textContent);
+
+    el.classList.remove(
+      "s16-move-new",
+      "s16-move-up",
+      "s16-move-down",
+      "s16-move-reentry",
+      "s16-move-current",
+      "s16-move-badge"
+    );
+
+    if (!text) return;
+
+    if (text === "NEW") {
+      el.classList.add("s16-move-badge", "s16-move-new");
+      return;
+    }
+
+    if (text === "RE-ENTRY" || text === "RE ENTRY" || text === "REENTER" || text === "RE-ENTER") {
+      el.classList.add("s16-move-badge", "s16-move-reentry");
+      return;
+    }
+
+    if (/^▲\s*\d+$/.test(text) || /^UP\s*\d+$/.test(text) || /^RISE\s*\d+$/.test(text)) {
+      el.classList.add("s16-move-badge", "s16-move-up");
+      return;
+    }
+
+    if (/^▼\s*\d+$/.test(text) || /^DOWN\s*\d+$/.test(text) || /^FALL\s*\d+$/.test(text)) {
+      el.classList.add("s16-move-badge", "s16-move-down");
+      return;
+    }
+
+    if (text === "▬" || text === "—" || text === "-" || text === "SAME" || text === "CURRENT") {
+      el.classList.add("s16-move-badge", "s16-move-current");
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  s16ApplyMovementClasses();
+
+  const obs = new MutationObserver(() => {
+    s16ApplyMovementClasses();
+  });
+
+  obs.observe(document.body, {
+    childList: true,
+    subtree: true,
+    characterData: true
+  });
+});
